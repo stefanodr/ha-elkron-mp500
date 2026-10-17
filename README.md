@@ -1,5 +1,7 @@
 # Elkron MP500 (IT500WEB) per Home Assistant
 
+🇮🇹 Italiano · 🇬🇧 [English](README.en.md)
+
 Integrazione personalizzata, **locale** (nessun cloud), per le centrali antifurto **Elkron MP500** con il modulo di rete **IT500WEB**. Mostra gli ingressi della centrale come sensori, mostra lo stato dell'impianto e permette di **inserire e disinserire tutto l'impianto** da Home Assistant.
 
 > **English, in short:** local (no cloud) custom integration for Elkron MP500 alarm panels with the IT500WEB network module. Input sensors, panel state and total arm/disarm. Names are read from the panel automatically if you give the Web Server login once (it is not stored). Install via HACS (custom repository) or by copying `custom_components/elkron_mp500`. Not affiliated with Elkron/Urmet. Tested only on an MP500/8; see "Limiti noti".
