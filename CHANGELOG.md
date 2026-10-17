@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.5 — l'evento dopo il comando non è più necessario
+- **Corretto:** sulla centrale reale, dopo inserimento o disinserimento l'evento `0x12` non arrivava, e l'integrazione dopo 8 secondi dava `TimeoutError` anche se il comando era riuscito. Ora l'evento è facoltativo (si aspetta fino a 3 s): la prova che il comando ha funzionato è lo stato letto subito dopo, che viene controllato per circa 10 secondi.
+- Un evento `0x12` che arriva in ritardo viene ignorato invece di far fallire la lettura successiva.
+- Test: la centrale simulata ora prova tre casi: evento puntuale, evento assente, evento in ritardo.
+
 ## 1.4.4 — correzione dell'errore dopo inserimento e disinserimento
 - **Corretto:** inserire o disinserire funzionava ma Home Assistant mostrava un errore (`TimeoutError`). Dopo il comando la centrale manda un `0x16` isolato (dopo circa 0,3 s) e la risposta vera, l'evento `0x12`, circa 0,2 s più tardi (visto nella cattura di Hi-Connect). L'integrazione scambiava il `0x16` per la risposta e smetteva di aspettare. Ora ignora i `0x16` isolati e attende la risposta vera.
 - Il test con la centrale simulata ora riproduce questo comportamento reale (prima rispondeva subito).

@@ -59,6 +59,7 @@ class FakePanel:
         self.logins = []
         self.mode_calls = []
         self.http_paths = []
+        self.event_mode = "normal"
         self.clogins = []
         self.plant_id = "55555555"
         self.tech_code = "000000"
@@ -111,8 +112,13 @@ class FakePanel:
                     await asyncio.sleep(0.3)
                     writer.write(b"\x16")
                     await writer.drain()
-                    await asyncio.sleep(0.2)
-                    writer.write(EVENT)
+                    if self.event_mode == "normal":
+                        await asyncio.sleep(0.2)
+                        writer.write(EVENT)
+                    elif self.event_mode == "late":
+                        # Arrives after the client stopped waiting for it.
+                        asyncio.get_running_loop().call_later(3.6, writer.write, EVENT)
+                    # "none": the panel never sends the 0x12 event
                 await writer.drain()
         except (asyncio.IncompleteReadError, ConnectionError):
             pass
@@ -155,6 +161,16 @@ async def main():
         assert not panel.armed and proto.CMD_DISARM in panel.tcp_frames
         assert (await client.read_state())["global_state"] == proto.STATE_DISARMED
         print("disarm over TCP + state confirmed: OK")
+
+        # The 0x12 event is optional: no event at all, or one that arrives late.
+        for mode in ("none", "late"):
+            panel.event_mode = mode
+            await client.arm()
+            assert panel.armed and (await client.read_state())["global_state"] == proto.STATE_ARMED
+            await client.disarm()
+            assert not panel.armed and (await client.read_state())["global_state"] == proto.STATE_DISARMED
+            print(f"arm/disarm with event mode '{mode}': OK")
+        panel.event_mode = "normal"
 
         panel.obey = False
         try:

@@ -284,14 +284,17 @@ class ElkronTcpClient:
         except Exception as err:
             _LOGGER.debug("Refresh sessione IT500WEB non riuscito: %s", err)
 
-    async def _read_byte(self, reader: asyncio.StreamReader) -> int:
-        data = await asyncio.wait_for(reader.readexactly(1), self.timeout)
+    async def _read_byte(self, reader: asyncio.StreamReader, timeout: float | None = None) -> int:
+        data = await asyncio.wait_for(reader.readexactly(1), timeout or self.timeout)
         return data[0]
 
     async def _read_response(
-        self, reader: asyncio.StreamReader, allow_single_16: bool = False
+        self,
+        reader: asyncio.StreamReader,
+        allow_single_16: bool = False,
+        first_timeout: float | None = None,
     ) -> bytes:
-        first = await self._read_byte(reader)
+        first = await self._read_byte(reader, first_timeout)
         if first in (0x06,):
             return bytes((first,))
         if first != 0x16:
@@ -341,7 +344,15 @@ class ElkronTcpClient:
         expected_command: int | None,
         *,
         allow_ack_only: bool = False,
+        first_timeout: float | None = None,
+        tolerate_silence: bool = False,
     ) -> bytes:
+        """Send a frame and read its reply.
+
+        With ``tolerate_silence`` a missing reply (nothing within ``first_timeout``)
+        returns b"" instead of raising: used for the arm/disarm event, which the
+        panel does not always send.
+        """
         writer.write(command)
         await writer.drain()
         # Waiting for a data reply: a lone 0x16 (keepalive-style filler) may come
@@ -352,11 +363,26 @@ class ElkronTcpClient:
         try:
             while True:
                 response = await self._read_response(
-                    reader, allow_single_16=allow_ack_only or wait_for_data
+                    reader,
+                    allow_single_16=allow_ack_only or wait_for_data,
+                    first_timeout=first_timeout,
                 )
-                if wait_for_data and response == b"\x16":
-                    continue
+                if wait_for_data:
+                    if response == b"\x16":
+                        continue
+                    if (
+                        len(response) > 8
+                        and response[8] == RESP_EVENT
+                        and expected_command != RESP_EVENT
+                    ):
+                        # A late arm/disarm event record: not the reply we wait for.
+                        _LOGGER.debug("Evento 0x12 in ritardo ignorato")
+                        continue
                 break
+        except TimeoutError:
+            if tolerate_silence:
+                return b""
+            raise
         except ElkronProtocolError as err:
             raise ElkronProtocolError(
                 f"Errore in risposta al frame {command.hex(' ')}: {err}"
@@ -509,13 +535,20 @@ class ElkronTcpClient:
             reader, writer = await self._ensure_tcp()
             try:
                 async with self._tcp_lock:
-                    await self._exchange(reader, writer, command, RESP_EVENT)
+                    # The 0x12 event record is not always sent (or arrives late):
+                    # it is optional. The proof is the state read afterwards.
+                    event = await self._exchange(
+                        reader, writer, command, RESP_EVENT,
+                        first_timeout=3.0, tolerate_silence=True,
+                    )
+                    if not event:
+                        _LOGGER.debug("Nessun evento 0x12 dopo il comando: verifico lo stato")
                     state = b""
-                    for attempt in range(6):
+                    for attempt in range(20):
                         state = await self._read_global_state(reader, writer)
                         if state == expected:
                             return
-                        if attempt < 5:
+                        if attempt < 19:
                             await asyncio.sleep(0.5)
                 raise ElkronProtocolError(
                     f"Stato dopo il comando non confermato: {state.hex(' ')}"
