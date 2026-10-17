@@ -299,14 +299,20 @@ class ElkronTcpClient:
 
         # Hi-Connect's keepalive response is a lone 0x16. A data response is
         # 0x16 0x81 ...; read its fixed header before trusting the length byte.
-        try:
-            second = await asyncio.wait_for(
-                reader.readexactly(1), min(0.25, self.timeout)
-            )
-        except asyncio.TimeoutError:
-            if allow_single_16:
-                return bytes((first,))
-            raise
+        while True:
+            try:
+                second = await asyncio.wait_for(
+                    reader.readexactly(1), min(0.25, self.timeout)
+                )
+            except asyncio.TimeoutError:
+                if allow_single_16:
+                    return bytes((first,))
+                raise
+            if second[0] == 0x16:
+                # The previous 0x16 was a lone filler and this one may start the
+                # real frame (they can arrive ~0.2 s apart after a command).
+                continue
+            break
         if second[0] != 0x81:
             raise ElkronProtocolError(
                 f"Header risposta IT500WEB inatteso dopo 0x16: 0x{second[0]:02X}"
@@ -338,10 +344,19 @@ class ElkronTcpClient:
     ) -> bytes:
         writer.write(command)
         await writer.drain()
+        # Waiting for a data reply: a lone 0x16 (keepalive-style filler) may come
+        # first. After the arm/disarm command the panel sends 0x16 about 0.3 s
+        # later and the 0x12 event about 0.5 s later (Hi-Connect capture), so a
+        # lone 0x16 must not end the wait.
+        wait_for_data = expected_command is not None and not allow_ack_only
         try:
-            response = await self._read_response(
-                reader, allow_single_16=allow_ack_only
-            )
+            while True:
+                response = await self._read_response(
+                    reader, allow_single_16=allow_ack_only or wait_for_data
+                )
+                if wait_for_data and response == b"\x16":
+                    continue
+                break
         except ElkronProtocolError as err:
             raise ElkronProtocolError(
                 f"Errore in risposta al frame {command.hex(' ')}: {err}"

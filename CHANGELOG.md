@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.4 — correzione dell'errore dopo inserimento e disinserimento
+- **Corretto:** inserire o disinserire funzionava ma Home Assistant mostrava un errore (`TimeoutError`). Dopo il comando la centrale manda un `0x16` isolato (dopo circa 0,3 s) e la risposta vera, l'evento `0x12`, circa 0,2 s più tardi (visto nella cattura di Hi-Connect). L'integrazione scambiava il `0x16` per la risposta e smetteva di aspettare. Ora ignora i `0x16` isolati e attende la risposta vera.
+- Il test con la centrale simulata ora riproduce questo comportamento reale (prima rispondeva subito).
+
 ## 1.4.3 — errori di inserimento/disinserimento leggibili
 - Se inserire o disinserire genera un errore, Home Assistant mostra la causa reale ("Inserimento non riuscito: ...") invece di "unknown error", e il log riporta i dettagli. Lo stato viene riletto comunque.
 

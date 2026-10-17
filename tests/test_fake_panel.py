@@ -106,6 +106,12 @@ class FakePanel:
                 elif frame in (proto.CMD_ARM, proto.CMD_DISARM):
                     if self.obey:
                         self.armed = frame == proto.CMD_ARM
+                    # Like the real panel: a lone 0x16 ~0.3 s after the command,
+                    # then the 0x12 event ~0.2 s later.
+                    await asyncio.sleep(0.3)
+                    writer.write(b"\x16")
+                    await writer.drain()
+                    await asyncio.sleep(0.2)
                     writer.write(EVENT)
                 await writer.drain()
         except (asyncio.IncompleteReadError, ConnectionError):
