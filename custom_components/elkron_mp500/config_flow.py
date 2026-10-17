@@ -10,6 +10,10 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
 
 from .const import (
+    CONF_CLEAR_DISARM_CODE,
+    CONF_DISARM_CODE,
+    CONF_DISARM_HASH,
+    CONF_DISARM_SALT,
     CONF_NAMES,
     CONF_PLANT_ID,
     CONF_PORT,
@@ -32,6 +36,7 @@ from .const import (
     MAX_SCAN_INTERVAL,
     MIN_SCAN_INTERVAL,
 )
+from .disarm_code import hash_code, valid_code
 from .protocol import (
     ElkronAuthError,
     ElkronBusyError,
@@ -208,6 +213,8 @@ class ElkronOptionsFlow(config_entries.OptionsFlow):
             ): str,
             vol.Optional(CONF_WEB_PASSWORD): _PASSWORD,
             vol.Optional(CONF_REFRESH, default=False): bool,
+            vol.Optional(CONF_DISARM_CODE): _PASSWORD,
+            vol.Optional(CONF_CLEAR_DISARM_CODE, default=False): bool,
         }
         for i in range(1, count + 1):
             schema[
@@ -244,6 +251,28 @@ class ElkronOptionsFlow(config_entries.OptionsFlow):
         web_password = user_input.get(CONF_WEB_PASSWORD) or ""
         structure = entry.options.get(CONF_STRUCTURE)
 
+        disarm = {
+            k: entry.options[k]
+            for k in (CONF_DISARM_SALT, CONF_DISARM_HASH)
+            if k in entry.options
+        }
+        new_code = (user_input.get(CONF_DISARM_CODE) or "").strip()
+        if user_input.get(CONF_CLEAR_DISARM_CODE):
+            disarm = {}
+        elif new_code:
+            if not valid_code(new_code):
+                return self._form(
+                    {
+                        CONF_SCAN_INTERVAL: user_input[CONF_SCAN_INTERVAL],
+                        CONF_WEB_USER: web_user,
+                        CONF_NAMES: names,
+                        CONF_TYPES: types,
+                    },
+                    {CONF_DISARM_CODE: "invalid_disarm_code"},
+                )
+            salt, digest = hash_code(new_code)
+            disarm = {CONF_DISARM_SALT: salt, CONF_DISARM_HASH: digest}
+
         if user_input.get(CONF_REFRESH):
             new_structure, error = await _web_structure(
                 entry.data[CONF_HOST], web_user, web_password
@@ -269,4 +298,5 @@ class ElkronOptionsFlow(config_entries.OptionsFlow):
         }
         if structure:
             options[CONF_STRUCTURE] = structure
+        options.update(disarm)
         return self.async_create_entry(title="", data=options)

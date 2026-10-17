@@ -154,7 +154,7 @@ async def main():
     flow = new_flow()
     form = await flow.async_step_init()
     keys = [str(k) for k in form["data_schema"].schema]
-    expected = ["scan_interval", "web_user", "web_password", "refresh_structure"] + [
+    expected = ["scan_interval", "web_user", "web_password", "refresh_structure", "disarm_code", "clear_disarm_code"] + [
         k for i in range(1, 10) for k in (f"name_{i}", f"type_{i}")
     ]
     assert keys == expected, keys
@@ -261,3 +261,57 @@ async def main():
 
 
 asyncio.run(main())
+
+
+# ---- disarm code (1.5.0) ----
+from custom_components.elkron_mp500.disarm_code import hash_code, verify_code, valid_code, AttemptLimiter
+s, h = hash_code("123456")
+assert verify_code("123456", s, h) and not verify_code("654321", s, h)
+assert not verify_code(None, s, h) and not verify_code("12345", s, h)
+assert valid_code("000000") and not valid_code("12a456") and not valid_code("1234567")
+lim = AttemptLimiter(3, 60)
+for _ in range(3): lim.failed()
+assert lim.seconds_locked() > 0
+lim.succeeded(); assert lim.seconds_locked() == 0
+print("disarm code OK")
+
+# entity-level disarm gate
+from unittest.mock import AsyncMock, MagicMock
+from types import SimpleNamespace as _N
+from homeassistant.exceptions import ServiceValidationError
+from custom_components.elkron_mp500.alarm_control_panel import ElkronAlarmPanel
+from custom_components.elkron_mp500.const import CONF_DISARM_SALT, CONF_DISARM_HASH
+
+
+async def _gate():
+    client = MagicMock(); client.model = "x"; client.disarm = AsyncMock()
+    coord = MagicMock(); coord.async_request_refresh = AsyncMock(); coord.data = {}
+    s, h = hash_code("123456")
+    entry = _N(entry_id="e", options={CONF_DISARM_SALT: s, CONF_DISARM_HASH: h}, data={})
+    ent = ElkronAlarmPanel(coord, client, entry)
+    assert ent.code_format is not None and ent._attr_code_arm_required is False
+    for bad in (None, "", "111111"):
+        try:
+            await ent.async_alarm_disarm(bad); raise SystemExit("no error")
+        except ServiceValidationError:
+            pass
+    client.disarm.assert_not_called()
+    await ent.async_alarm_disarm("123456"); client.disarm.assert_awaited_once()
+    # no code configured -> unchanged behaviour
+    entry2 = _N(entry_id="e", options={}, data={})
+    ent2 = ElkronAlarmPanel(coord, client, entry2)
+    assert ent2.code_format is None
+    await ent2.async_alarm_disarm(None)
+    assert client.disarm.await_count == 2
+    # lockout after 5 wrong
+    for _ in range(5):
+        try: await ent.async_alarm_disarm("000000")
+        except ServiceValidationError: pass
+    try:
+        await ent.async_alarm_disarm("123456"); raise SystemExit("not locked")
+    except ServiceValidationError as e:
+        assert "bloccato" in str(e)
+    print("entity disarm gate OK")
+
+import asyncio as _a
+_a.run(_gate())

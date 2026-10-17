@@ -3,17 +3,19 @@ from __future__ import annotations
 import logging
 
 from homeassistant.components.alarm_control_panel import (
+    CodeFormat,
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
     AlarmControlPanelState,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ALARM_ENTITY_ID, DOMAIN
+from .const import ALARM_ENTITY_ID, CONF_DISARM_HASH, CONF_DISARM_SALT, DOMAIN
+from .disarm_code import AttemptLimiter, verify_code
 from .protocol import STATE_ARMED, STATE_DISARMED
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,6 +40,8 @@ class ElkronAlarmPanel(CoordinatorEntity, AlarmControlPanelEntity):
     def __init__(self, coordinator, client, entry: ConfigEntry) -> None:
         super().__init__(coordinator)
         self._client = client
+        self._entry = entry
+        self._limiter = AttemptLimiter()
         self._attr_unique_id = f"{entry.entry_id}_alarm"
         self.entity_id = ALARM_ENTITY_ID  # stable id
         self._attr_name = "Sistema"
@@ -86,5 +90,28 @@ class ElkronAlarmPanel(CoordinatorEntity, AlarmControlPanelEntity):
     async def async_alarm_arm_away(self, code=None) -> None:
         await self._async_command("Inserimento", self._client.arm)
 
+    @property
+    def code_format(self) -> CodeFormat | None:
+        # A numeric keypad is shown (and a code expected) only to disarm, and only
+        # when a code was set in the options. Arming never asks for it.
+        return CodeFormat.NUMBER if self._code_configured else None
+
+    @property
+    def _code_configured(self) -> bool:
+        options = getattr(self._entry, "options", {}) or {}
+        return bool(options.get(CONF_DISARM_HASH) and options.get(CONF_DISARM_SALT))
+
     async def async_alarm_disarm(self, code=None) -> None:
+        if self._code_configured:
+            locked = self._limiter.seconds_locked()
+            if locked:
+                raise ServiceValidationError(
+                    f"Troppi codici errati: disinserimento bloccato per altri {locked} secondi."
+                )
+            options = self._entry.options
+            if not verify_code(code, options[CONF_DISARM_SALT], options[CONF_DISARM_HASH]):
+                self._limiter.failed()
+                _LOGGER.warning("Disinserimento rifiutato: codice mancante o errato")
+                raise ServiceValidationError("Codice non valido: disinserimento non eseguito.")
+            self._limiter.succeeded()
         await self._async_command("Disinserimento", self._client.disarm)

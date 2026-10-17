@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.0
+- Codice di disinserimento facoltativo a 6 cifre, scelto dall'utente in Opzioni e gestito solo da Home Assistant (la centrale non lo conosce). Salvato solo come hash PBKDF2 con salt.
+- Inserimento sempre senza codice. Senza codice impostato il comportamento è invariato.
+- Blocco di 5 minuti dopo 5 codici errati consecutivi.
+
 ## 1.4.5 — l'evento dopo il comando non è più necessario
 - **Corretto:** sulla centrale reale, dopo inserimento o disinserimento l'evento `0x12` non arrivava, e l'integrazione dopo 8 secondi dava `TimeoutError` anche se il comando era riuscito. Ora l'evento è facoltativo (si aspetta fino a 3 s): la prova che il comando ha funzionato è lo stato letto subito dopo, che viene controllato per circa 10 secondi.
 - Un evento `0x12` che arriva in ritardo viene ignorato invece di far fallire la lettura successiva.

@@ -16,6 +16,12 @@ Independent project: **not affiliated with or endorsed by Elkron/Urmet**. The IT
 - **`Sistema` entity** (alarm control panel): `disarmed` / `armed_away` and the **arm** and **disarm** commands. In this version the **whole system** is always armed or disarmed.
 - **Local.** No account or cloud. The module must be reachable on the network from Home Assistant.
 
+## Disarm code (optional)
+
+In **Settings → Devices & services → Elkron MP500 → Configure** you can set a 6-digit numeric code of your choice. It is not the panel's user or technician code: it only exists in Home Assistant. When set, Home Assistant asks for it before disarming (dashboard, scripts, voice assistants); arming stays code-free. Only a salted hash is stored. After 5 consecutive wrong codes, disarming is locked for 5 minutes. Tick "Remove the disarm code" to remove it.
+
+This is a software gate: it does not protect against disarming from the app, the web UI or the panel keypad.
+
 ## What it does NOT do (yet)
 
 - **Partial** or per-sector arming, scenarios and outputs.
@@ -90,7 +96,7 @@ Entity ids are fixed and do not change if you rename the inputs: `alarm_control_
 
 ## Arming and disarming
 
-It uses the panel's total arm/disarm TCP command. **Total arming and disarming are verified on a real MP500/8** (version 1.4.5). After each command the integration re-reads the state for about 10 seconds: if it does not change, it raises an error instead of pretending it worked. The panel does not always send a confirmation reply to the command, so the proof that it worked is the state read right afterwards. The command does not ask for the user code: **protect the `Sistema` entity** (Home Assistant users, automations, dashboards) as you would protect the keypad.
+It uses the panel's total arm/disarm TCP command. **Total arming and disarming are verified on a real MP500/8** (version 1.4.5). After each command the integration re-reads the state for about 10 seconds: if it does not change, it raises an error instead of pretending it worked. The panel does not always send a confirmation reply to the command, so the proof that it worked is the state read right afterwards. The network command does not carry a user code: to avoid unwanted disarming set the Home Assistant **disarm code** (section below) and **protect the `Sistema` entity** (Home Assistant users, automations, dashboards) as you would protect the keypad.
 
 ## Known limitations
 

@@ -31,7 +31,7 @@
     "step": {
       "init": {
         "title": "Elkron MP500",
-        "description": "Polling interval (from 1 s). To re-read names and sectors from the panel tick \"Re-read names\" and enter the Web Server user and password (they are not stored): hand-typed names are replaced by the panel's. Name and type of each input stay editable; the type decides whether you read Open/Closed or Detected.",
+        "description": "Polling interval (from 1 s). To re-read names and sectors from the panel tick \"Re-read names\" and enter the Web Server user and password (they are not stored): hand-typed names are replaced by the panel's. Name and type of each input stay editable; the type decides whether you read Open/Closed or Detected. You choose the disarm code here, in Home Assistant: it is not a panel code. When set, Home Assistant asks for it before disarming; arming stays code-free.",
         "data": {
           "scan_interval": "Polling interval (seconds)",
           "name_1": "Input 1 name",
@@ -68,7 +68,9 @@
           "type_16": "Input 16 type",
           "web_user": "Web Server user (only to re-read names)",
           "web_password": "Web Server password (only to re-read names, not stored)",
-          "refresh_structure": "Reread names from the panel"
+          "refresh_structure": "Reread names from the panel",
+          "disarm_code": "Disarm code (6 digits, optional: empty = unchanged)",
+          "clear_disarm_code": "Remove the disarm code"
         }
       }
     },
@@ -81,7 +83,8 @@
       "web_failed": "Could not read the names from the Web Server. Check the log.",
       "local_auth_failed": "The panel refused the local login. Check the plant code and technical code; if they are right, close the app, Web Server and Hi-Connect, wait 2 minutes and try again.",
       "invalid_plant_id": "The plant code must be 8 digits.",
-      "invalid_tech_code": "The technical code must be 4 to 8 digits."
+      "invalid_tech_code": "The technical code must be 4 to 8 digits.",
+      "invalid_disarm_code": "The code must be 6 digits."
     }
   },
   "selector": {

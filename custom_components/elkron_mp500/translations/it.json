@@ -31,7 +31,7 @@
     "step": {
       "init": {
         "title": "Elkron MP500",
-        "description": "Intervallo di lettura (da 1 s). Per rileggere nomi e settori dalla centrale spunta \"Rileggi i nomi\" e inserisci utente e password del Web Server (non vengono salvati): i nomi scritti a mano vengono sostituiti da quelli della centrale. Nome e tipo di ogni ingresso restano modificabili; il tipo decide se si legge Aperto/Chiuso o Rilevato.",
+        "description": "Intervallo di lettura (da 1 s). Per rileggere nomi e settori dalla centrale spunta \"Rileggi i nomi\" e inserisci utente e password del Web Server (non vengono salvati): i nomi scritti a mano vengono sostituiti da quelli della centrale. Nome e tipo di ogni ingresso restano modificabili; il tipo decide se si legge Aperto/Chiuso o Rilevato. Il codice di disinserimento lo scegli tu qui, in Home Assistant: non è un codice della centrale. Se impostato, Home Assistant lo chiede prima di disinserire; l'inserimento resta senza codice.",
         "data": {
           "scan_interval": "Intervallo di polling (secondi)",
           "name_1": "Nome ingresso 1",
@@ -68,7 +68,9 @@
           "type_16": "Tipo ingresso 16",
           "web_user": "Utente Web Server (solo per rileggere i nomi)",
           "web_password": "Password Web Server (solo per rileggere i nomi, non viene salvata)",
-          "refresh_structure": "Rileggi i nomi dalla centrale"
+          "refresh_structure": "Rileggi i nomi dalla centrale",
+          "disarm_code": "Codice di disinserimento (6 cifre, facoltativo: vuoto = invariato)",
+          "clear_disarm_code": "Togli il codice di disinserimento"
         }
       }
     },
@@ -81,7 +83,8 @@
       "web_failed": "Impossibile leggere i nomi dal Web Server. Controlla il log.",
       "local_auth_failed": "La centrale ha rifiutato l'accesso locale. Controlla codice impianto e codice tecnico; se sono giusti, chiudi app, Web Server e Hi-Connect, aspetta 2 minuti e riprova.",
       "invalid_plant_id": "Il codice impianto deve essere di 8 cifre.",
-      "invalid_tech_code": "Il codice tecnico deve avere da 4 a 8 cifre."
+      "invalid_tech_code": "Il codice tecnico deve avere da 4 a 8 cifre.",
+      "invalid_disarm_code": "Il codice deve essere di 6 cifre."
     }
   },
   "selector": {

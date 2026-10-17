@@ -16,6 +16,12 @@ Progetto indipendente: **non è affiliato né approvato da Elkron/Urmet**. Il pr
 - **Entità `Sistema`** (pannello di allarme): `Disattivato` / `Fuori casa` (inserito) e i comandi **inserisci** e **disinserisci**. In questa versione si inserisce e disinserisce **sempre tutto l'impianto**.
 - **Locale.** Nessun account o cloud. Il modulo deve essere raggiungibile in rete dalla macchina di Home Assistant.
 
+## Codice di disinserimento (facoltativo)
+
+In **Impostazioni → Dispositivi e servizi → Elkron MP500 → Configura** puoi impostare un codice numerico di 6 cifre, scelto da te. Non è il codice utente né tecnico della centrale: vale solo in Home Assistant. Se impostato, Home Assistant lo chiede prima di disinserire (dashboard, script, assistenti vocali); l'inserimento resta senza codice. Il codice è salvato solo come hash con salt. Dopo 5 errori consecutivi il disinserimento è bloccato per 5 minuti. Per toglierlo spunta "Togli il codice di disinserimento".
+
+È un blocco software: non protegge dai disinserimenti fatti con app, web o tastiera della centrale.
+
 ## Cosa NON fa (per ora)
 
 - Inserimento **parziale** o per singolo settore, scenari e uscite.
@@ -90,7 +96,7 @@ Gli `entity_id` sono fissi e non cambiano se rinomini gli ingressi: `alarm_contr
 
 ## Inserimento e disinserimento
 
-Si usa il comando TCP di inserimento/disinserimento totale della centrale. **Inserimento e disinserimento totali sono verificati su una centrale MP500/8 reale** (versione 1.4.5). Dopo ogni comando l'integrazione rilegge lo stato per circa 10 secondi: se non cambia, restituisce un errore invece di far finta che sia andato a buon fine. La centrale non sempre manda una risposta di conferma al comando: per questo la prova che ha funzionato è lo stato letto subito dopo. Il comando non chiede il codice utente: **proteggi l'entità `Sistema`** (utenti Home Assistant, automazioni e dashboard) come proteggeresti il tastierino.
+Si usa il comando TCP di inserimento/disinserimento totale della centrale. **Inserimento e disinserimento totali sono verificati su una centrale MP500/8 reale** (versione 1.4.5). Dopo ogni comando l'integrazione rilegge lo stato per circa 10 secondi: se non cambia, restituisce un errore invece di far finta che sia andato a buon fine. La centrale non sempre manda una risposta di conferma al comando: per questo la prova che ha funzionato è lo stato letto subito dopo. Il comando di rete non chiede il codice utente: per evitare disinserimenti involontari imposta il **codice di disinserimento** di Home Assistant (sezione sotto) e **proteggi l'entità `Sistema`** (utenti Home Assistant, automazioni e dashboard) come proteggeresti il tastierino.
 
 ## Limiti noti
 
