@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
@@ -7,11 +9,14 @@ from homeassistant.components.alarm_control_panel import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ALARM_ENTITY_ID, DOMAIN
 from .protocol import STATE_ARMED, STATE_DISARMED
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -65,10 +70,21 @@ class ElkronAlarmPanel(CoordinatorEntity, AlarmControlPanelEntity):
         # "partially armed" and expose the raw value in `stato_grezzo`.
         return AlarmControlPanelState.ARMED_CUSTOM_BYPASS
 
+    async def _async_command(self, action: str, command) -> None:
+        """Run arm/disarm; show the real cause in the UI instead of "unknown error"."""
+        try:
+            await command()
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.warning(
+                "Comando %s non riuscito (%s): %s", action, type(err).__name__, err, exc_info=True
+            )
+            raise HomeAssistantError(f"{action} non riuscito: {err}") from err
+        finally:
+            # The panel may have changed state even if the reply was unexpected.
+            await self.coordinator.async_request_refresh()
+
     async def async_alarm_arm_away(self, code=None) -> None:
-        await self._client.arm()
-        await self.coordinator.async_request_refresh()
+        await self._async_command("Inserimento", self._client.arm)
 
     async def async_alarm_disarm(self, code=None) -> None:
-        await self._client.disarm()
-        await self.coordinator.async_request_refresh()
+        await self._async_command("Disinserimento", self._client.disarm)

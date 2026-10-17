@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.4.3 — errori di inserimento/disinserimento leggibili
+- Se inserire o disinserire genera un errore, Home Assistant mostra la causa reale ("Inserimento non riuscito: ...") invece di "unknown error", e il log riporta i dettagli. Lo stato viene riletto comunque.
+
 ## 1.4.2 — id delle entità fissi e prevedibili
 - Gli `entity_id` non dipendono più dal nome: `alarm_control_panel.elkron_mp500_sistema` e `binary_sensor.elkron_mp500_ingresso_1` ... `_N`. Prima erano ricavati dal nome intero (per esempio `binary_sensor.ingresso_1_ingressi_princ_pt_e_1p`) e cambiavano se rinominavi un ingresso, rompendo dashboard e automazioni.
 - All'avvio le entità create dalle versioni precedenti vengono rinominate una sola volta con gli id fissi (se l'id è libero). Gli id non verranno più cambiati.
