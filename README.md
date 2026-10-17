@@ -4,7 +4,7 @@
 
 Integrazione personalizzata, **locale** (nessun cloud), per le centrali antifurto **Elkron MP500** con il modulo di rete **IT500WEB**. Mostra gli ingressi della centrale come sensori, mostra lo stato dell'impianto e permette di **inserire e disinserire tutto l'impianto** da Home Assistant.
 
-> **English, in short:** local (no cloud) custom integration for Elkron MP500 alarm panels with the IT500WEB network module. Input sensors, panel state and total arm/disarm. Names are read from the panel automatically if you give the Web Server login once (it is not stored). Install via HACS (custom repository) or by copying `custom_components/elkron_mp500`. Not affiliated with Elkron/Urmet. Tested only on an MP500/8; see "Limiti noti".
+> **English, in short:** local (no cloud) custom integration for Elkron MP500 alarm panels with the IT500WEB network module. Input sensors, panel state and total arm/disarm. Names are read from the panel automatically if you give the Web Server login once (it is not stored). Install via HACS (custom repository) or by copying `custom_components/elkron_mp500`. Not affiliated with Elkron/Urmet. Tested only on an MP500/8 (reading, total arm and disarm verified there); see "Limiti noti".
 
 Progetto indipendente: **non è affiliato né approvato da Elkron/Urmet**. Il protocollo del modulo IT500WEB non è pubblico: l'integrazione è basata sull'analisi del traffico di rete di Hi-Connect e del Web Server. Usala a tuo rischio e, prima di fidarti dei comandi, provali con l'impianto sotto controllo.
 
@@ -90,11 +90,11 @@ Gli `entity_id` sono fissi e non cambiano se rinomini gli ingressi: `alarm_contr
 
 ## Inserimento e disinserimento
 
-Si usa il comando TCP di inserimento/disinserimento totale della centrale. Dopo ogni comando l'integrazione rilegge lo stato: se non è cambiato, restituisce un errore invece di far finta che sia andato a buon fine. Il comando non chiede il codice utente: **proteggi l'entità `Sistema`** (utenti Home Assistant, automazioni e dashboard) come proteggeresti il tastierino.
+Si usa il comando TCP di inserimento/disinserimento totale della centrale. **Inserimento e disinserimento totali sono verificati su una centrale MP500/8 reale** (versione 1.4.5). Dopo ogni comando l'integrazione rilegge lo stato per circa 10 secondi: se non cambia, restituisce un errore invece di far finta che sia andato a buon fine. La centrale non sempre manda una risposta di conferma al comando: per questo la prova che ha funzionato è lo stato letto subito dopo. Il comando non chiede il codice utente: **proteggi l'entità `Sistema`** (utenti Home Assistant, automazioni e dashboard) come proteggeresti il tastierino.
 
 ## Limiti noti
 
-- Provata solo su **MP500/8 con IT500WEB** (firmware `it500web 2.0.170615`). Altri modelli, firmware o impianti non sono verificati.
+- Provata solo su **MP500/8 con IT500WEB** (firmware `it500web 2.0.170615`): lettura degli ingressi, stato, inserimento e disinserimento totali sono verificati su questo impianto. Altri modelli, firmware o impianti non sono verificati.
 - **Codice impianto diverso da `55555555`:** il codice impianto è inviato anche nel frame TCP di apertura sessione. Con il valore di fabbrica il frame è identico a quello catturato; con altri valori segue lo stesso formato ma **non è stato verificato** su una centrale reale. Se non funziona, apri una segnalazione.
 - **Inserimento totale** = frame verificato con tutti i settori (maschera `ff 00`). Impianti con più di 8 settori potrebbero comportarsi diversamente.
 - Valori di ingresso diversi da `00` e `02` (per esempio ingresso escluso, manomissione, allarme) non sono noti: guarda `raw_state` e segnalali.

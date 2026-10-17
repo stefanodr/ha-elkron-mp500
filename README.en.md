@@ -90,11 +90,11 @@ Entity ids are fixed and do not change if you rename the inputs: `alarm_control_
 
 ## Arming and disarming
 
-It uses the panel's total arm/disarm TCP command. After each command the integration re-reads the state: if it did not change, it raises an error instead of pretending it worked. The command does not ask for the user code: **protect the `Sistema` entity** (Home Assistant users, automations, dashboards) as you would protect the keypad.
+It uses the panel's total arm/disarm TCP command. **Total arming and disarming are verified on a real MP500/8** (version 1.4.5). After each command the integration re-reads the state for about 10 seconds: if it does not change, it raises an error instead of pretending it worked. The panel does not always send a confirmation reply to the command, so the proof that it worked is the state read right afterwards. The command does not ask for the user code: **protect the `Sistema` entity** (Home Assistant users, automations, dashboards) as you would protect the keypad.
 
 ## Known limitations
 
-- Tested only on an **MP500/8 with IT500WEB** (firmware `it500web 2.0.170615`). Other models, firmwares or installations are unverified.
+- Tested only on an **MP500/8 with IT500WEB** (firmware `it500web 2.0.170615`): reading inputs, state, and total arm and disarm are verified on this installation. Other models, firmwares or installations are unverified.
 - **Plant code other than `55555555`:** the plant code is also sent in the TCP session-opening frame. With the factory value the frame is identical to the captured one; with other values it follows the same layout but is **unverified** on a real panel. If it does not work, open an issue.
 - **Total arming** = frame verified with all sectors (mask `ff 00`). Installations with more than 8 sectors may behave differently.
 - Input values other than `00` and `02` (for example excluded, tamper, alarm) are unknown: look at `raw_state` and report them.
