@@ -29,3 +29,14 @@ INPUT_OPEN = 0x02
 # "Rilevato/Non rilevato" instead of "Acceso/Spento". Default: opening.
 INPUT_TYPES = ("opening", "door", "window", "motion")
 DEFAULT_INPUT_TYPE = "opening"
+
+
+# Predictable entity ids, independent of the (editable) names:
+#   alarm_control_panel.elkron_mp500_sistema, binary_sensor.elkron_mp500_ingresso_N
+# They are part of the public interface (dashboards, automations): never change them.
+ENTITY_PREFIX = "elkron_mp500"
+ALARM_ENTITY_ID = f"alarm_control_panel.{ENTITY_PREFIX}_sistema"
+
+
+def input_entity_id(input_id: int) -> str:
+    return f"binary_sensor.{ENTITY_PREFIX}_ingresso_{input_id}"

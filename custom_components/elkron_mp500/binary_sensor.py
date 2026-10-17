@@ -6,7 +6,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_NAMES, CONF_STRUCTURE, CONF_TYPES, DEFAULT_INPUT_TYPE, DOMAIN, INPUT_OPEN
+from .const import (
+    CONF_NAMES,
+    CONF_STRUCTURE,
+    CONF_TYPES,
+    DEFAULT_INPUT_TYPE,
+    DOMAIN,
+    INPUT_OPEN,
+    input_entity_id,
+)
 
 
 async def async_setup_entry(
@@ -62,6 +70,7 @@ class ElkronInputSensor(CoordinatorEntity, BinarySensorEntity):
         self._attr_device_class = BinarySensorDeviceClass(input_type)
         self._sectors = sectors or []
         self._attr_unique_id = f"{entry.entry_id}_input_{input_id}"
+        self.entity_id = input_entity_id(input_id)  # stable id, whatever the name
         self._attr_name = (
             f"Ingresso {input_id} ({input_name})" if input_name else f"Ingresso {input_id}"
         )

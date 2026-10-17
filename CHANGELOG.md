@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.2 — id delle entità fissi e prevedibili
+- Gli `entity_id` non dipendono più dal nome: `alarm_control_panel.elkron_mp500_sistema` e `binary_sensor.elkron_mp500_ingresso_1` ... `_N`. Prima erano ricavati dal nome intero (per esempio `binary_sensor.ingresso_1_ingressi_princ_pt_e_1p`) e cambiavano se rinominavi un ingresso, rompendo dashboard e automazioni.
+- All'avvio le entità create dalle versioni precedenti vengono rinominate una sola volta con gli id fissi (se l'id è libero). Gli id non verranno più cambiati.
+
 ## 1.4.1 — diagnostica del rifiuto di accesso
 - Il messaggio "codici non accettati" compariva con qualsiasi rifiuto della centrale, anche se la causa era un altro accesso attivo (app, Web Server, Hi-Connect). Ora il messaggio dice di controllare i codici e, se sono giusti, di chiudere gli altri accessi e aspettare 2 minuti.
 - Il log di Home Assistant riporta la risposta della centrale al rifiuto (non contiene codici).

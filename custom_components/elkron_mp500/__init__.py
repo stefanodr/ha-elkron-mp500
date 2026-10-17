@@ -4,7 +4,8 @@ from datetime import timedelta
 import logging
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -19,7 +20,9 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_TECH_CODE,
+    ALARM_ENTITY_ID,
     DOMAIN,
+    input_entity_id,
 )
 from .protocol import ElkronTcpClient
 
@@ -75,6 +78,29 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
+def _desired_entity_id(unique_id: str, entry_id: str) -> str | None:
+    if unique_id == f"{entry_id}_alarm":
+        return ALARM_ENTITY_ID
+    prefix = f"{entry_id}_input_"
+    if unique_id.startswith(prefix) and unique_id[len(prefix):].isdigit():
+        return input_entity_id(int(unique_id[len(prefix):]))
+    return None
+
+
+@callback
+def async_fix_entity_ids(registry: er.EntityRegistry, entry: ConfigEntry) -> None:
+    """One-time move of entities created by earlier versions to the stable ids.
+
+    Earlier versions derived the id from the name ("binary_sensor.ingresso_1_...").
+    An id that is already taken is left alone.
+    """
+    for item in er.async_entries_for_config_entry(registry, entry.entry_id):
+        wanted = _desired_entity_id(item.unique_id, entry.entry_id)
+        if wanted and item.entity_id != wanted and registry.async_get(wanted) is None:
+            _LOGGER.info("Entità %s rinominata in %s", item.entity_id, wanted)
+            registry.async_update_entity(item.entity_id, new_entity_id=wanted)
+
+
 async def _async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await hass.config_entries.async_reload(entry.entry_id)
 
@@ -108,6 +134,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "coordinator": coordinator,
     }
     entry.async_on_unload(entry.add_update_listener(_async_options_updated))
+    async_fix_entity_ids(er.async_get(hass), entry)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 

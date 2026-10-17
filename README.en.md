@@ -82,6 +82,8 @@ Every session opening is written in the panel's event history (user TECNICO). Th
 The panel thinks in **inputs**, not in individual doors or windows. An MP500/8 has **8 wired inputs**, and several contacts can be wired in series on each (for example several doors and windows on one input). **Wireless** sensors (such as a wireless PIR) are added as further inputs. Home Assistant therefore sees **one sensor per input**, not one per physical door or window: if an input groups three windows, it tells you that "something" on that input is open.
 
 ## Entities
+Entity ids are fixed and do not change if you rename the inputs: `alarm_control_panel.elkron_mp500_sistema` and `binary_sensor.elkron_mp500_ingresso_1`, `..._2`, ... Use them in dashboards and automations.
+
 
 - `binary_sensor.*ingresso_N*`: on (open/detected) = value `02`, off = `00`. Attributes: `raw_state` (raw value), `settori`.
 - `alarm_control_panel.*sistema*`: `disarmed`, `armed_away`; with any other value (for example only some sectors armed from the app) it shows **armed_custom_bypass** and the `stato_grezzo` attribute. Also the `sessioni_aperte` attribute.

@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import ALARM_ENTITY_ID, DOMAIN
 from .protocol import STATE_ARMED, STATE_DISARMED
 
 
@@ -34,6 +34,7 @@ class ElkronAlarmPanel(CoordinatorEntity, AlarmControlPanelEntity):
         super().__init__(coordinator)
         self._client = client
         self._attr_unique_id = f"{entry.entry_id}_alarm"
+        self.entity_id = ALARM_ENTITY_ID  # stable id
         self._attr_name = "Sistema"
         self._attr_device_info = {
             "identifiers": {(DOMAIN, entry.entry_id)},

@@ -82,6 +82,8 @@ Ogni apertura di sessione viene scritta nello storico eventi della centrale (ute
 La centrale ragiona per **ingressi**, non per singole porte o finestre. Una MP500/8 ha **8 ingressi cablati**, e a ciascuno si possono collegare più contatti in serie (per esempio più porte e finestre sullo stesso ingresso). I sensori **wireless** (per esempio un EIR) si aggiungono come ingressi ulteriori. Home Assistant vede quindi **un sensore per ingresso**, non uno per ogni finestra o porta fisica: se un ingresso raggruppa tre finestre, ti dirà che "qualcosa" su quell'ingresso è aperto.
 
 ## Entità create
+Gli `entity_id` sono fissi e non cambiano se rinomini gli ingressi: `alarm_control_panel.elkron_mp500_sistema` e `binary_sensor.elkron_mp500_ingresso_1`, `..._2`, ... Usali nelle dashboard e nelle automazioni.
+
 
 - `binary_sensor.*ingresso_N*`: acceso (aperto/rilevato) = valore `02`, spento = `00`. Attributi: `raw_state` (valore grezzo), `settori`.
 - `alarm_control_panel.*sistema*`: `disarmed`, `armed_away`; con altri valori (per esempio solo alcuni settori inseriti dall'app) mostra **armed_custom_bypass** e l'attributo `stato_grezzo`. Attributo `sessioni_aperte`.

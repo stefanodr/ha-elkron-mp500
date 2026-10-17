@@ -90,10 +90,39 @@ async def main():
     assert s7.is_on is None and s7.extra_state_attributes == {}
     print("binary sensors (names, sectors, types): OK")
 
+    # 2b) stable entity ids, whatever the names
+    assert s1.entity_id == "binary_sensor.elkron_mp500_ingresso_1" and s9.entity_id == "binary_sensor.elkron_mp500_ingresso_9"
+    from custom_components.elkron_mp500 import async_fix_entity_ids
+
+    class Item(SimpleNamespace):
+        pass
+
+    items = [
+        Item(entity_id="alarm_control_panel.sistema", unique_id="e1_alarm"),
+        Item(entity_id="binary_sensor.ingresso_1_ingressi_princ_pt_e_1p", unique_id="e1_input_1"),
+        Item(entity_id="binary_sensor.elkron_mp500_ingresso_2", unique_id="e1_input_2"),  # already right
+        Item(entity_id="binary_sensor.ingresso_3_x", unique_id="e1_input_3"),
+        Item(entity_id="binary_sensor.altro", unique_id="e1_input_x"),  # unknown: untouched
+    ]
+    taken = {"binary_sensor.elkron_mp500_ingresso_3"}  # an id that is already in use: leave alone
+    renamed = {}
+    registry = SimpleNamespace(
+        entities=SimpleNamespace(get_entries_for_config_entry_id=lambda _id: items),
+        async_get=lambda eid: object() if eid in taken else None,
+        async_update_entity=lambda eid, new_entity_id: renamed.__setitem__(eid, new_entity_id),
+    )
+    async_fix_entity_ids(registry, SimpleNamespace(entry_id="e1"))
+    assert renamed == {
+        "alarm_control_panel.sistema": "alarm_control_panel.elkron_mp500_sistema",
+        "binary_sensor.ingresso_1_ingressi_princ_pt_e_1p": "binary_sensor.elkron_mp500_ingresso_1",
+    }, renamed
+    print("stable entity ids + one-time rename: OK")
+
     # 3) alarm panel exposes the session counter
     client = SimpleNamespace(bootstraps=3, model=None)
     coordinator.data = {"inputs": [0] * 9, "global_state": b"\x00\x00"}
     panel = alarm_control_panel.ElkronAlarmPanel(coordinator, client, SimpleNamespace(entry_id="e1"))
+    assert panel.entity_id == "alarm_control_panel.elkron_mp500_sistema"
     assert panel.extra_state_attributes == {"sessioni_aperte": 3, "stato_grezzo": "00 00"}
     A = alarm_control_panel.AlarmControlPanelState
     assert panel.state == A.DISARMED
