@@ -22,7 +22,7 @@
       "web_login_failed": "Invalid Web Server user or password.",
       "web_credentials_missing": "Enter the Web Server user and password.",
       "web_failed": "Could not read the names from the Web Server. Check the log.",
-      "local_auth_failed": "The panel did not accept the plant code or technical code.",
+      "local_auth_failed": "The panel refused the local login. Check the plant code and technical code; if they are right, close the app, Web Server and Hi-Connect, wait 2 minutes and try again.",
       "invalid_plant_id": "The plant code must be 8 digits.",
       "invalid_tech_code": "The technical code must be 4 to 8 digits."
     }
@@ -79,7 +79,7 @@
       "web_login_failed": "Invalid Web Server user or password.",
       "web_credentials_missing": "Enter the Web Server user and password.",
       "web_failed": "Could not read the names from the Web Server. Check the log.",
-      "local_auth_failed": "The panel did not accept the plant code or technical code.",
+      "local_auth_failed": "The panel refused the local login. Check the plant code and technical code; if they are right, close the app, Web Server and Hi-Connect, wait 2 minutes and try again.",
       "invalid_plant_id": "The plant code must be 8 digits.",
       "invalid_tech_code": "The technical code must be 4 to 8 digits."
     }

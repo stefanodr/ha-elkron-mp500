@@ -212,7 +212,9 @@ class ElkronTcpClient:
         except (TypeError, json.JSONDecodeError) as err:
             raise ElkronProtocolError(f"Risposta HTTP non JSON da {path}") from err
         if result.get("result") != "ACK":
-            raise ElkronRejectedError(f"Comando HTTP rifiutato da {path}")
+            raise ElkronRejectedError(
+                f"Comando HTTP rifiutato da {path} (risposta: {body[:200]})"
+            )
         return result
 
     async def _ensure_http_session(self) -> None:
@@ -235,11 +237,9 @@ class ElkronTcpClient:
                 try:
                     login = await self._http_request("/user/clogin.cgi", self._login)
                 except ElkronRejectedError as err:
-                    raise ElkronAuthError(
-                        "Codice impianto o codice tecnico non accettati"
-                    ) from err
+                    raise ElkronAuthError(f"Accesso locale rifiutato dalla centrale: {err}") from err
                 if login.get("data", {}).get("authlevel", 0) <= 0:
-                    raise ElkronAuthError("Codice impianto o codice tecnico non accettati")
+                    raise ElkronAuthError(f"Accesso locale senza permessi (risposta: {login.get('data')})")
                 await self._http_request("/sys/mode.cgi", CMD_MODE_2)
                 await self._http_request("/sys/info.cgi")
                 await self._http_request("/sys/mode.cgi", CMD_MODE_3)

@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.1 — diagnostica del rifiuto di accesso
+- Il messaggio "codici non accettati" compariva con qualsiasi rifiuto della centrale, anche se la causa era un altro accesso attivo (app, Web Server, Hi-Connect). Ora il messaggio dice di controllare i codici e, se sono giusti, di chiudere gli altri accessi e aspettare 2 minuti.
+- Il log di Home Assistant riporta la risposta della centrale al rifiuto (non contiene codici).
+
 ## 1.4.0 — versione pubblicabile (GitHub / HACS)
 - **Codici configurabili.** Codice impianto (`plantid`) e codice tecnico (`code`) sono campi facoltativi nella configurazione (valori di fabbrica precompilati). Prima erano scritti nel codice. Il codice impianto entra anche nel frame TCP di apertura sessione (verificato solo con il valore di fabbrica).
 - **Nomi automatici o "Ingresso N".** Con le credenziali del Web Server i nomi si leggono dalla centrale; altrimenti, o per ingressi senza nome, "Ingresso 1, 2, 3...". Il numero di ingressi si rileva dalla centrale.

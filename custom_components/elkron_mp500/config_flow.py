@@ -99,7 +99,8 @@ class ElkronConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     await client.read_state()
             except ElkronBusyError:
                 errors["base"] = "web_busy"
-            except ElkronAuthError:
+            except ElkronAuthError as err:
+                _LOGGER.warning("IT500WEB ha rifiutato l'accesso locale su %s: %s", host, err)
                 errors["base"] = "local_auth_failed"
             except ConnectionRefusedError as err:
                 _LOGGER.warning(

@@ -22,7 +22,7 @@
       "web_login_failed": "Utente o password del Web Server non validi.",
       "web_credentials_missing": "Inserisci utente e password del Web Server.",
       "web_failed": "Impossibile leggere i nomi dal Web Server. Controlla il log.",
-      "local_auth_failed": "Codice impianto o codice tecnico non accettati dalla centrale.",
+      "local_auth_failed": "La centrale ha rifiutato l'accesso locale. Controlla codice impianto e codice tecnico; se sono giusti, chiudi app, Web Server e Hi-Connect, aspetta 2 minuti e riprova.",
       "invalid_plant_id": "Il codice impianto deve essere di 8 cifre.",
       "invalid_tech_code": "Il codice tecnico deve avere da 4 a 8 cifre."
     }
@@ -79,7 +79,7 @@
       "web_login_failed": "Utente o password del Web Server non validi.",
       "web_credentials_missing": "Inserisci utente e password del Web Server.",
       "web_failed": "Impossibile leggere i nomi dal Web Server. Controlla il log.",
-      "local_auth_failed": "Codice impianto o codice tecnico non accettati dalla centrale.",
+      "local_auth_failed": "La centrale ha rifiutato l'accesso locale. Controlla codice impianto e codice tecnico; se sono giusti, chiudi app, Web Server e Hi-Connect, aspetta 2 minuti e riprova.",
       "invalid_plant_id": "Il codice impianto deve essere di 8 cifre.",
       "invalid_tech_code": "Il codice tecnico deve avere da 4 a 8 cifre."
     }
