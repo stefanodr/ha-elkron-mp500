@@ -1,0 +1,97 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Elkron MP500",
+        "description": "Connection to the local IT500WEB interface. If you have not changed the codes, keep the factory ones. Web Server user and password are optional: they are used once (a login of less than a second) to read the input names from the panel, and are NOT stored. Without them inputs are called \"Ingresso 1, 2, 3...\" and can be renamed in the options.",
+        "data": {
+          "host": "IT500WEB IP address",
+          "port": "TCP port",
+          "scan_interval": "Polling interval (seconds)",
+          "web_user": "Web Server user (optional)",
+          "web_password": "Web Server password",
+          "plant_id": "Plant code (8 digits, optional)",
+          "tech_code": "Technical code (optional)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Unable to communicate with the IT500WEB TCP interface.",
+      "connection_refused": "Connection refused: the device is not accepting TCP connections on this port. Check the IP address, port, and IT500WEB TCP service.",
+      "web_busy": "The Web Server is busy (someone is logged in). Try again shortly.",
+      "web_login_failed": "Invalid Web Server user or password.",
+      "web_credentials_missing": "Enter the Web Server user and password.",
+      "web_failed": "Could not read the names from the Web Server. Check the log.",
+      "local_auth_failed": "The panel did not accept the plant code or technical code.",
+      "invalid_plant_id": "The plant code must be 8 digits.",
+      "invalid_tech_code": "The technical code must be 4 to 8 digits."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Elkron MP500",
+        "description": "Polling interval (from 1 s). To re-read names and sectors from the panel tick \"Re-read names\" and enter the Web Server user and password (they are not stored): hand-typed names are replaced by the panel's. Name and type of each input stay editable; the type decides whether you read Open/Closed or Detected.",
+        "data": {
+          "scan_interval": "Polling interval (seconds)",
+          "name_1": "Input 1 name",
+          "name_2": "Input 2 name",
+          "name_3": "Input 3 name",
+          "name_4": "Input 4 name",
+          "name_5": "Input 5 name",
+          "name_6": "Input 6 name",
+          "name_7": "Input 7 name",
+          "name_8": "Input 8 name",
+          "name_9": "Input 9 name",
+          "name_10": "Input 10 name",
+          "name_11": "Input 11 name",
+          "name_12": "Input 12 name",
+          "name_13": "Input 13 name",
+          "name_14": "Input 14 name",
+          "name_15": "Input 15 name",
+          "name_16": "Input 16 name",
+          "type_1": "Input 1 type",
+          "type_2": "Input 2 type",
+          "type_3": "Input 3 type",
+          "type_4": "Input 4 type",
+          "type_5": "Input 5 type",
+          "type_6": "Input 6 type",
+          "type_7": "Input 7 type",
+          "type_8": "Input 8 type",
+          "type_9": "Input 9 type",
+          "type_10": "Input 10 type",
+          "type_11": "Input 11 type",
+          "type_12": "Input 12 type",
+          "type_13": "Input 13 type",
+          "type_14": "Input 14 type",
+          "type_15": "Input 15 type",
+          "type_16": "Input 16 type",
+          "web_user": "Web Server user (only to re-read names)",
+          "web_password": "Web Server password (only to re-read names, not stored)",
+          "refresh_structure": "Reread names from the panel"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Unable to communicate with the IT500WEB TCP interface.",
+      "connection_refused": "Connection refused: the device is not accepting TCP connections on this port. Check the IP address, port, and IT500WEB TCP service.",
+      "web_busy": "The Web Server is busy (someone is logged in). Try again shortly.",
+      "web_login_failed": "Invalid Web Server user or password.",
+      "web_credentials_missing": "Enter the Web Server user and password.",
+      "web_failed": "Could not read the names from the Web Server. Check the log.",
+      "local_auth_failed": "The panel did not accept the plant code or technical code.",
+      "invalid_plant_id": "The plant code must be 8 digits.",
+      "invalid_tech_code": "The technical code must be 4 to 8 digits."
+    }
+  },
+  "selector": {
+    "input_type": {
+      "options": {
+        "opening": "Opening (generic)",
+        "door": "Door",
+        "window": "Window",
+        "motion": "Motion"
+      }
+    }
+  }
+}

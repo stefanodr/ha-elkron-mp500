@@ -1,0 +1,12 @@
+{
+  "domain": "elkron_mp500",
+  "name": "Elkron MP500 WebServer",
+  "codeowners": ["@stefanodr"],
+  "config_flow": true,
+  "documentation": "https://github.com/stefanodr/ha-elkron-mp500",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/stefanodr/ha-elkron-mp500/issues",
+  "requirements": [],
+  "version": "1.4.0"
+}

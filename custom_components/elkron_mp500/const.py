@@ -1,0 +1,31 @@
+DOMAIN = "elkron_mp500"
+
+CONF_HOST = "host"
+CONF_PORT = "port"
+CONF_SCAN_INTERVAL = "scan_interval"
+CONF_NAMES = "names"
+CONF_TYPES = "types"
+CONF_STRUCTURE = "structure"
+CONF_WEB_USER = "web_user"
+CONF_WEB_PASSWORD = "web_password"
+CONF_REFRESH = "refresh_structure"
+CONF_PLANT_ID = "plant_id"
+CONF_TECH_CODE = "tech_code"
+
+from .protocol import DEFAULT_PLANT_ID, DEFAULT_TECH_CODE  # noqa: E402,F401
+
+DEFAULT_HOST = ""
+DEFAULT_PORT = 5555
+DEFAULT_SCAN_INTERVAL = 10
+MIN_SCAN_INTERVAL = 1
+MAX_SCAN_INTERVAL = 300
+MAX_NAMED_INPUTS = 16
+
+# Value of an input byte in the 0x84 reply: 0x02 = open, 0x00 = closed
+# (verified on inputs 1 and 7 in the 2026-10-15 captures).
+INPUT_OPEN = 0x02
+
+# Input type = Home Assistant device class, so states read "Aperto/Chiuso" or
+# "Rilevato/Non rilevato" instead of "Acceso/Spento". Default: opening.
+INPUT_TYPES = ("opening", "door", "window", "motion")
+DEFAULT_INPUT_TYPE = "opening"

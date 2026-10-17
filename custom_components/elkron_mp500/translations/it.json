@@ -1,0 +1,97 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Elkron MP500",
+        "description": "Connessione all'interfaccia locale IT500WEB. Se non hai cambiato i codici, lascia quelli di fabbrica. Utente e password del Web Server sono facoltativi: servono una sola volta (login di meno di un secondo) per leggere dalla centrale i nomi degli ingressi, e NON vengono salvati. Senza, gli ingressi si chiamano \"Ingresso 1, 2, 3...\" e puoi rinominarli dalle opzioni.",
+        "data": {
+          "host": "Indirizzo IP IT500WEB",
+          "port": "Porta TCP",
+          "scan_interval": "Intervallo di polling (secondi)",
+          "web_user": "Utente Web Server (facoltativo)",
+          "web_password": "Password Web Server",
+          "plant_id": "Codice impianto (8 cifre, facoltativo)",
+          "tech_code": "Codice tecnico (facoltativo)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Impossibile comunicare con l'interfaccia TCP IT500WEB.",
+      "connection_refused": "Connessione rifiutata: il dispositivo non accetta collegamenti TCP sulla porta indicata. Verificare indirizzo IP, porta e servizio TCP IT500WEB.",
+      "web_busy": "Il Web Server è occupato (qualcuno è collegato). Riprova tra poco.",
+      "web_login_failed": "Utente o password del Web Server non validi.",
+      "web_credentials_missing": "Inserisci utente e password del Web Server.",
+      "web_failed": "Impossibile leggere i nomi dal Web Server. Controlla il log.",
+      "local_auth_failed": "Codice impianto o codice tecnico non accettati dalla centrale.",
+      "invalid_plant_id": "Il codice impianto deve essere di 8 cifre.",
+      "invalid_tech_code": "Il codice tecnico deve avere da 4 a 8 cifre."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Elkron MP500",
+        "description": "Intervallo di lettura (da 1 s). Per rileggere nomi e settori dalla centrale spunta \"Rileggi i nomi\" e inserisci utente e password del Web Server (non vengono salvati): i nomi scritti a mano vengono sostituiti da quelli della centrale. Nome e tipo di ogni ingresso restano modificabili; il tipo decide se si legge Aperto/Chiuso o Rilevato.",
+        "data": {
+          "scan_interval": "Intervallo di polling (secondi)",
+          "name_1": "Nome ingresso 1",
+          "name_2": "Nome ingresso 2",
+          "name_3": "Nome ingresso 3",
+          "name_4": "Nome ingresso 4",
+          "name_5": "Nome ingresso 5",
+          "name_6": "Nome ingresso 6",
+          "name_7": "Nome ingresso 7",
+          "name_8": "Nome ingresso 8",
+          "name_9": "Nome ingresso 9",
+          "name_10": "Nome ingresso 10",
+          "name_11": "Nome ingresso 11",
+          "name_12": "Nome ingresso 12",
+          "name_13": "Nome ingresso 13",
+          "name_14": "Nome ingresso 14",
+          "name_15": "Nome ingresso 15",
+          "name_16": "Nome ingresso 16",
+          "type_1": "Tipo ingresso 1",
+          "type_2": "Tipo ingresso 2",
+          "type_3": "Tipo ingresso 3",
+          "type_4": "Tipo ingresso 4",
+          "type_5": "Tipo ingresso 5",
+          "type_6": "Tipo ingresso 6",
+          "type_7": "Tipo ingresso 7",
+          "type_8": "Tipo ingresso 8",
+          "type_9": "Tipo ingresso 9",
+          "type_10": "Tipo ingresso 10",
+          "type_11": "Tipo ingresso 11",
+          "type_12": "Tipo ingresso 12",
+          "type_13": "Tipo ingresso 13",
+          "type_14": "Tipo ingresso 14",
+          "type_15": "Tipo ingresso 15",
+          "type_16": "Tipo ingresso 16",
+          "web_user": "Utente Web Server (solo per rileggere i nomi)",
+          "web_password": "Password Web Server (solo per rileggere i nomi, non viene salvata)",
+          "refresh_structure": "Rileggi i nomi dalla centrale"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Impossibile comunicare con l'interfaccia TCP IT500WEB.",
+      "connection_refused": "Connessione rifiutata: il dispositivo non accetta collegamenti TCP sulla porta indicata. Verificare indirizzo IP, porta e servizio TCP IT500WEB.",
+      "web_busy": "Il Web Server è occupato (qualcuno è collegato). Riprova tra poco.",
+      "web_login_failed": "Utente o password del Web Server non validi.",
+      "web_credentials_missing": "Inserisci utente e password del Web Server.",
+      "web_failed": "Impossibile leggere i nomi dal Web Server. Controlla il log.",
+      "local_auth_failed": "Codice impianto o codice tecnico non accettati dalla centrale.",
+      "invalid_plant_id": "Il codice impianto deve essere di 8 cifre.",
+      "invalid_tech_code": "Il codice tecnico deve avere da 4 a 8 cifre."
+    }
+  },
+  "selector": {
+    "input_type": {
+      "options": {
+        "opening": "Apertura (generico)",
+        "door": "Porta",
+        "window": "Finestra",
+        "motion": "Movimento"
+      }
+    }
+  }
+}
