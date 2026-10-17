@@ -30,7 +30,11 @@ Progetto indipendente: **non è affiliato né approvato da Elkron/Urmet**. Il pr
 
 ### Con HACS (consigliata)
 1. HACS → menu a tre puntini → **Repository personalizzati**.
-2. Incolla l'indirizzo di questo repository, categoria **Integrazione** → Aggiungi.
+2. Incolla questo indirizzo nel campo "Repository":
+   ```
+   https://github.com/stefanodr/ha-elkron-mp500
+   ```
+   Categoria **Integrazione** → **Aggiungi**.
 3. Cerca **Elkron MP500**, scarica, **riavvia Home Assistant**.
 
 ### Manuale
