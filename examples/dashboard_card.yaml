@@ -425,10 +425,15 @@ cards:
                 name: ✓
                 show_icon: false
                 tap_action:
-                  action: perform-action
-                  perform_action: elkron_mp500.keypad_submit
-                  target:
-                    entity_id: alarm_control_panel.elkron_mp500_sistema
+                  action: fire-dom-event
+                  browser_mod:
+                    service: browser_mod.sequence
+                    data:
+                      sequence:
+                      - service: elkron_mp500.keypad_submit
+                        data:
+                          entity_id: alarm_control_panel.elkron_mp500_sistema
+                      - service: browser_mod.close_popup
                 styles:
                   card:
                   - background: '#1fa65f'

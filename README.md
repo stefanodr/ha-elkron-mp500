@@ -26,7 +26,7 @@ In **Impostazioni → Dispositivi e servizi → Elkron MP500 → Configura** puo
 
 In [`examples/dashboard_card.yaml`](examples/dashboard_card.yaml) c'è una card pronta: display con lo stato, pulsanti INSERISCI e DISINSERISCI e un riquadro per ogni ingresso con nome, stato e ultima variazione (toccando un riquadro si apre lo storico). Richiede da HACS: *button-card*, *stack-in-card*, *card-mod* e *Browser Mod*. Come usarla: Dashboard → Modifica → Aggiungi scheda → **Manuale** → incolla il contenuto del file. Se la tua centrale ha meno ingressi cancella i riquadri in più.
 
-DISINSERISCI apre un **tastierino numerico** (servizi `elkron_mp500.keypad_press` e `keypad_submit`): le cifre restano solo in memoria nell'integrazione e si azzerano dopo 30 secondi. Se hai impostato il codice di disinserimento viene controllato, altrimenti il disinserimento parte comunque.
+DISINSERISCI apre un **tastierino numerico** (servizi `elkron_mp500.keypad_press` e `keypad_submit`): le cifre restano solo in memoria nell'integrazione e si azzerano dopo 30 secondi. Con il codice giusto il popup si chiude da solo; con quello sbagliato resta aperto con l'errore. Se hai impostato il codice di disinserimento viene controllato, altrimenti il disinserimento parte comunque.
 
 ## Cosa NON fa (per ora)
 
