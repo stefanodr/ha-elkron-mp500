@@ -24,11 +24,11 @@ print("HA", hc.__version__)
 
 STRUCTURE = {
     "sensors": {
-        "1": {"name": "INGRESSI PRINC. PT E 1P", "sectors": [1]},
-        "7": {"name": "PORTA BLINDATA PT+EIR VE", "sectors": [7]},
-        "9": {"name": "EIR VERANDA", "sectors": [7]},
+        "1": {"name": "PORTA INGRESSO", "sectors": [1]},
+        "7": {"name": "PORTA SECONDARIA", "sectors": [7]},
+        "9": {"name": "SENSORE VERANDA", "sectors": [7]},
     },
-    "sectors": {"1": "PORTA ING1+2", "7": "PORTA BLIND."},
+    "sectors": {"1": "SETTORE INGRESSO", "7": "SETTORE SECONDARIO"},
 }
 
 
@@ -82,9 +82,9 @@ async def main():
     s1, s2, s7, s9 = created[0], created[1], created[6], created[8]
     assert s1.name == "Ingresso 1 (Ingresso principale)", s1.name  # manual name wins
     assert s2.name == "Ingresso 2" and s2.extra_state_attributes == {"raw_state": 0}  # not in the panel data
-    assert s7.name == "Ingresso 7 (PORTA BLINDATA PT+EIR VE)" and s7.is_on is True and s7.device_class == DC.DOOR
-    assert s9.name == "Ingresso 9 (EIR VERANDA)" and s9.device_class == DC.MOTION
-    assert s9.extra_state_attributes == {"raw_state": 0, "settori": ["7 - PORTA BLIND."]}, s9.extra_state_attributes
+    assert s7.name == "Ingresso 7 (PORTA SECONDARIA)" and s7.is_on is True and s7.device_class == DC.DOOR
+    assert s9.name == "Ingresso 9 (SENSORE VERANDA)" and s9.device_class == DC.MOTION
+    assert s9.extra_state_attributes == {"raw_state": 0, "settori": ["7 - SETTORE SECONDARIO"]}, s9.extra_state_attributes
     assert s7.icon is None and s2.icon == "mdi:door-closed"  # opening type: door icon follows state
     coordinator.data = {"inputs": [0, 0]}
     assert s7.is_on is None and s7.extra_state_attributes == {}
@@ -136,7 +136,7 @@ async def main():
     coordinator.data = {"inputs": [0] * 9}
     entry = SimpleNamespace(
         entry_id="e1",
-        data={"host": "192.168.1.100"},
+        data={"host": "192.168.1.50"},
         options={const.CONF_NAMES: {"1": "Ingresso principale"}},
     )
     fake_hass = SimpleNamespace(
@@ -166,7 +166,7 @@ async def main():
 
     # refresh: panel names replace the manual ones and the structure is stored
     async def ok_fetch(host, user, pwd, timeout=8.0):
-        assert (host, user, pwd) == ("192.168.1.100", "u", "p")
+        assert (host, user, pwd) == ("192.168.1.50", "u", "p")
         return STRUCTURE
 
     config_flow.fetch_structure = ok_fetch
@@ -174,7 +174,7 @@ async def main():
         {"scan_interval": 5, "refresh_structure": True, "name_1": "x", "web_user": "u", "web_password": "p"}
     )
     result = await new_flow().async_step_init(validated)
-    assert entry.data == {"host": "192.168.1.100"}  # login is not stored
+    assert entry.data == {"host": "192.168.1.50"}  # login is not stored
     assert result["data"][const.CONF_NAMES] == {} and result["data"][const.CONF_STRUCTURE] == STRUCTURE, result
 
     # refresh while the panel is busy: error shown, nothing saved
@@ -229,13 +229,13 @@ async def main():
         flow.context = {}
         return flow
 
-    base = {"host": "192.168.1.100", "port": 5555, "scan_interval": 2}
+    base = {"host": "192.168.1.50", "port": 5555, "scan_interval": 2}
     res = await new_setup_flow().async_step_user({**base, "web_user": "u", "web_password": "p"})
     assert res["type"].value == "create_entry", res
     assert res["data"] == {
-        "host": "192.168.1.100", "port": 5555, "scan_interval": 2, "plant_id": "55555555", "tech_code": "000000"
+        "host": "192.168.1.50", "port": 5555, "scan_interval": 2, "plant_id": "55555555", "tech_code": "000000"
     }, res["data"]  # web login not stored
-    assert res["options"] == {"structure": STRUCTURE} and calls == [("192.168.1.100", "u")]
+    assert res["options"] == {"structure": STRUCTURE} and calls == [("192.168.1.50", "u")]
     res = await new_setup_flow().async_step_user(base)  # no web login: names stay generic
     assert res["type"].value == "create_entry" and res["options"] == {}, res
     assert len(calls) == 1

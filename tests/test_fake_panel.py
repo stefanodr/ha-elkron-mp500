@@ -37,14 +37,14 @@ STRUCT = {
     "cfgarea": [{"NAME": "", "NID": 0, "PID": []}],
     "cfgoutput": [],
     "cfgsensor": [
-        {"NAME": "Ingresso 1 - INGRESSI PRINC. PT E 1P", "NID": 1, "PID": [1]},
-        {"NAME": "Ingresso 7 - PORTA BLINDATA PT+EIR VE", "NID": 7, "PID": [7]},
-        {"NAME": "Ingresso 8 - PORTA DOPPIA PT", "NID": 8, "PID": [8]},
-        {"NAME": "Ingresso 9 - EIR VERANDA", "NID": 9, "PID": [7]},
+        {"NAME": "Ingresso 1 - PORTA INGRESSO", "NID": 1, "PID": [1]},
+        {"NAME": "Ingresso 7 - PORTA SECONDARIA", "NID": 7, "PID": [7]},
+        {"NAME": "Ingresso 8 - FINESTRA SALOTTO", "NID": 8, "PID": [8]},
+        {"NAME": "Ingresso 9 - SENSORE VERANDA", "NID": 9, "PID": [7]},
     ],
     "cfgzone": [
-        {"NAME": "Settore 1 - PORTA ING1+2", "NID": 1, "PID": [0]},
-        {"NAME": "Settore 7 - PORTA BLIND.", "NID": 7, "PID": [0]},
+        {"NAME": "Settore 1 - SETTORE INGRESSO", "NID": 1, "PID": [0]},
+        {"NAME": "Settore 7 - SETTORE SECONDARIO", "NID": 7, "PID": [0]},
     ],
 }
 
@@ -205,9 +205,9 @@ async def main():
         # Web API: names and sectors with one short login.
         panel.http_paths.clear()
         st = await proto.fetch_structure("127.0.0.1", "u", "p")
-        assert st["sensors"]["9"] == {"name": "EIR VERANDA", "sectors": [7]}, st
-        assert st["sensors"]["7"]["name"] == "PORTA BLINDATA PT+EIR VE"
-        assert st["sectors"] == {"1": "PORTA ING1+2", "7": "PORTA BLIND."}, st
+        assert st["sensors"]["9"] == {"name": "SENSORE VERANDA", "sectors": [7]}, st
+        assert st["sensors"]["7"]["name"] == "PORTA SECONDARIA"
+        assert st["sectors"] == {"1": "SETTORE INGRESSO", "7": "SETTORE SECONDARIO"}, st
         assert panel.http_paths[-1] == "/user/logout.cgi", panel.http_paths
         assert panel.http_paths.count("/user/login.cgi") == 1
         print("fetch_structure (names, sectors, logout): OK")
