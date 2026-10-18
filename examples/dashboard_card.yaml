@@ -217,24 +217,8 @@ cards:
           content:
             type: vertical-stack
             cards:
-            - type: custom:button-card
-              entity: alarm_control_panel.elkron_mp500_sistema
-              show_icon: false
-              show_name: false
-              show_state: true
-              tap_action:
-                action: none
-              state_display: '[[[ var n = Number(entity.attributes.cifre_digitate || 0); return n ? ''●''.repeat(n) : ''Inserisci il codice''; ]]]
-
-                '
-              styles:
-                card:
-                - background: transparent
-                - border: none
-                - height: 56px
-                state:
-                - font-size: 26px
-                - letter-spacing: 6px
+            - type: markdown
+              content: <center><h1>{% set n = state_attr('alarm_control_panel.elkron_mp500_sistema','cifre_digitate') | int(0) %}{{ '●' * n if n else 'Inserisci il codice' }}</h1></center>
             - type: grid
               columns: 3
               square: false
@@ -251,7 +235,7 @@ cards:
                     key: '1'
                 styles:
                   card:
-                  - background: null
+                  - background: '#3a4252'
                   - border-radius: 14px
                   - height: 56px
                   name:
@@ -269,7 +253,7 @@ cards:
                     key: '2'
                 styles:
                   card:
-                  - background: null
+                  - background: '#3a4252'
                   - border-radius: 14px
                   - height: 56px
                   name:
@@ -287,7 +271,7 @@ cards:
                     key: '3'
                 styles:
                   card:
-                  - background: null
+                  - background: '#3a4252'
                   - border-radius: 14px
                   - height: 56px
                   name:
@@ -305,7 +289,7 @@ cards:
                     key: '4'
                 styles:
                   card:
-                  - background: null
+                  - background: '#3a4252'
                   - border-radius: 14px
                   - height: 56px
                   name:
@@ -323,7 +307,7 @@ cards:
                     key: '5'
                 styles:
                   card:
-                  - background: null
+                  - background: '#3a4252'
                   - border-radius: 14px
                   - height: 56px
                   name:
@@ -341,7 +325,7 @@ cards:
                     key: '6'
                 styles:
                   card:
-                  - background: null
+                  - background: '#3a4252'
                   - border-radius: 14px
                   - height: 56px
                   name:
@@ -359,7 +343,7 @@ cards:
                     key: '7'
                 styles:
                   card:
-                  - background: null
+                  - background: '#3a4252'
                   - border-radius: 14px
                   - height: 56px
                   name:
@@ -377,7 +361,7 @@ cards:
                     key: '8'
                 styles:
                   card:
-                  - background: null
+                  - background: '#3a4252'
                   - border-radius: 14px
                   - height: 56px
                   name:
@@ -395,7 +379,7 @@ cards:
                     key: '9'
                 styles:
                   card:
-                  - background: null
+                  - background: '#3a4252'
                   - border-radius: 14px
                   - height: 56px
                   name:
@@ -413,7 +397,7 @@ cards:
                     key: C
                 styles:
                   card:
-                  - background: null
+                  - background: '#8a3b3b'
                   - border-radius: 14px
                   - height: 56px
                   name:
@@ -431,7 +415,7 @@ cards:
                     key: '0'
                 styles:
                   card:
-                  - background: null
+                  - background: '#3a4252'
                   - border-radius: 14px
                   - height: 56px
                   name:
@@ -447,7 +431,7 @@ cards:
                     entity_id: alarm_control_panel.elkron_mp500_sistema
                 styles:
                   card:
-                  - background: null
+                  - background: '#1fa65f'
                   - border-radius: 14px
                   - height: 56px
                   name:
