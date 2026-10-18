@@ -70,7 +70,7 @@ cards:
       name:
       - color: '#ff8a80'
 - type: grid
-  columns: 3
+  columns: 2
   square: false
   card_mod:
     style: "ha-card {\n  background: transparent !important;\n  border: none !important;\n  box-shadow: none !important;\n  padding: 0 !important;\n}\n#root {\n  gap: 6px !important;\n}\n"
@@ -145,35 +145,6 @@ cards:
       styles:
         icon:
         - color: '#6b7280'
-  - type: custom:button-card
-    entity: alarm_control_panel.elkron_mp500_sistema
-    name: GUASTO
-    icon: mdi:circle
-    show_state: false
-    tap_action:
-      action: none
-    styles:
-      card:
-      - background: transparent
-      - border: none
-      - box-shadow: none
-      - padding: 2px 0
-      grid:
-      - grid-template-areas: '"i" "n"'
-      - grid-template-rows: 14px min-content
-      icon:
-      - width: 12px
-      - color: '#4b5563'
-      name:
-      - color: '#9ba8bd'
-      - font-size: 8px
-      - letter-spacing: 1px
-      - font-weight: bold
-    state:
-    - value: unavailable
-      styles:
-        icon:
-        - color: '#ff5252'
 - type: grid
   columns: 2
   square: false
