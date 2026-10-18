@@ -94,7 +94,7 @@
 - Dopo il comando viene riletto lo stato generale (`0x80`) fino a 6 volte; se non cambia, l'azione fallisce con un errore invece di fingere di riuscire.
 - Prima di ogni comando la sessione viene riaperta con la sequenza catturata (login HTTP, mode 2/3, avvio TCP).
 - Un solo lock serializza letture e comandi, così il polling non si sovrappone a un inserimento.
-- Aggiunto `tests/test_fake_panel.py`: centrale simulata (HTTP :80 + TCP :5555) basata sulla cattura.
+- Aggiunto `tests/test_fake_panel.py`: centrale simulata (HTTP + TCP) basata sulla cattura.
 
 ### Non ancora verificato su impianto reale
 - Il comando è stato provato solo contro la centrale simulata. Provalo prima con l'impianto in condizioni sicure (sirena scollegata o avvisa chi è in casa).
@@ -104,7 +104,7 @@
 ## 1.0.0 — release finale
 - Basata sulla 0.4.4 e collaudata dall'utente sulla propria centrale Elkron MP500/8 con IT500WEB: esito positivo riferito dall'utente.
 - Conservati senza modifiche il client TCP, il bootstrap HTTP e la logica/comandi dell'entità `Sistema`.
-- Campo IP senza indirizzo precompilato; porta TCP predefinita 5555.
+- Campo IP senza indirizzo precompilato; porta TCP predefinita.
 - Documentazione d'installazione e ripristino aggiornata.
 - Il codice tecnico resta quello della base 0.4.4; non è esposto come opzione configurabile in questa release.
 

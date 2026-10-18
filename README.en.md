@@ -38,7 +38,7 @@ If you set a disarm code, DISARM opens a **numeric keypad** (services `elkron_mp
 
 - An Elkron MP500 panel with an IT500WEB module on your network, preferably with a **fixed IP** (DHCP reservation on your router).
 - A recent Home Assistant (tested on 2026.10; automatic tests on 2026.2).
-- The module's TCP service on port `5555` (default).
+- The module's TCP service on its default TCP port.
 
 ## Installation
 
@@ -63,11 +63,11 @@ If you set a disarm code, DISARM opens a **numeric keypad** (services `elkron_mp
 | Field | What to enter |
 |---|---|
 | IT500WEB IP address | The module's IP (the one you open in the browser for the Web Server). |
-| TCP port | `5555` (leave it unless you changed it). |
+| TCP port | The default one (leave it unless you changed it). |
 | Polling interval | How often to read the state, in seconds. 10 s is fine; use 1–2 s for motion sensors. Min 1, max 300. |
 | Web Server user / password | **Optional.** The same user and password you use on the module's web page. Used **once** to read the names; **not stored**. Leave empty to get "Ingresso N". |
-| Plant code | **Optional.** 8 digits. Keep the factory value `55555555` if you did not change it. |
-| Technical code | **Optional.** Keep the factory value `000000` if you did not change it. |
+| Plant code | **Optional.** 8 digits. Keep the factory value (pre-filled) if you did not change it. |
+| Technical code | **Optional.** Keep the factory value (pre-filled) if you did not change it. |
 
 3. Confirm. If the panel does not accept the codes you will see "The panel did not accept the plant code or technical code."
 
@@ -107,7 +107,7 @@ It uses the panel's total arm/disarm TCP command. **Total arming and disarming a
 ## Known limitations
 
 - Tested only on an **MP500/8 with IT500WEB** (firmware `it500web 2.0.170615`): reading inputs, state, and total arm and disarm are verified on this installation. Other models, firmwares or installations are unverified.
-- **Plant code other than `55555555`:** the plant code is also sent in the TCP session-opening frame. With the factory value the frame is identical to the captured one; with other values it follows the same layout but is **unverified** on a real panel. If it does not work, open an issue.
+- **Plant code other than the factory one:** the plant code is also sent in the TCP session-opening frame. With the factory value the frame is identical to the captured one; with other values it follows the same layout but is **unverified** on a real panel. If it does not work, open an issue.
 - **Total arming** = frame verified with all sectors (mask `ff 00`). Installations with more than 8 sectors may behave differently.
 - Input values other than `00` and `02` (for example excluded, tamper, alarm) are unknown: look at `raw_state` and report them.
 - In my tests two inputs (a double door and a wireless PIR) did not change in the bytes read: the mapping of some wireless sensors to inputs may not be direct.
@@ -145,7 +145,7 @@ Open an issue with: model and firmware version (the `cmodel` and `backend` field
 
 The tests use a simulated panel and need no hardware:
 ```
-python -I tests/test_fake_panel.py      # protocol (uses ports 80 and 5555 on localhost)
+python -I tests/test_fake_panel.py      # protocol (uses the panel's network ports, on localhost)
 python - < tests/test_ha_parts.py       # Home Assistant side (needs the homeassistant package)
 ```
 See `CHANGELOG.md` for the version history. MIT licence.

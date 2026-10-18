@@ -38,7 +38,7 @@ Se hai impostato il codice, DISINSERISCI apre un **tastierino numerico** (serviz
 
 - Centrale Elkron MP500 con modulo IT500WEB collegato alla rete, con **IP fisso** (consigliato: prenotazione sul router).
 - Home Assistant recente (provata con la 2026.10; i test automatici con la 2026.2).
-- Il servizio TCP del modulo sulla porta `5555` (predefinita).
+- Il servizio TCP del modulo sulla porta TCP predefinita.
 
 ## Installazione
 
@@ -63,11 +63,11 @@ Se hai impostato il codice, DISINSERISCI apre un **tastierino numerico** (serviz
 | Campo | Cosa mettere |
 |---|---|
 | Indirizzo IP IT500WEB | L'IP del modulo (lo stesso che apri nel browser per il Web Server). |
-| Porta TCP | `5555` (lasciala se non l'hai cambiata). |
+| Porta TCP | Quella predefinita (lasciala se non l'hai cambiata). |
 | Intervallo di polling | Ogni quanti secondi leggere lo stato. 10 s va bene; per i sensori di movimento 1–2 s. Minimo 1, massimo 300. |
 | Utente / Password Web Server | **Facoltativi.** Sono lo stesso utente e la stessa password con cui entri nella pagina web del modulo. Servono **una sola volta** per leggere i nomi e **non vengono salvati**. Lasciali vuoti per avere "Ingresso N". |
-| Codice impianto | **Facoltativo.** 8 cifre. Lascia il valore di fabbrica `55555555` se non l'hai cambiato. |
-| Codice tecnico | **Facoltativo.** Lascia il valore di fabbrica `000000` se non l'hai cambiato. |
+| Codice impianto | **Facoltativo.** 8 cifre. Lascia il valore di fabbrica (precompilato) se non l'hai cambiato. |
+| Codice tecnico | **Facoltativo.** Lascia il valore di fabbrica (precompilato) se non l'hai cambiato. |
 
 3. Conferma. Se i codici non sono accettati dalla centrale vedrai l'errore "Codice impianto o codice tecnico non accettati".
 
@@ -107,7 +107,7 @@ Si usa il comando TCP di inserimento/disinserimento totale della centrale. **Ins
 ## Limiti noti
 
 - Provata solo su **MP500/8 con IT500WEB** (firmware `it500web 2.0.170615`): lettura degli ingressi, stato, inserimento e disinserimento totali sono verificati su questo impianto. Altri modelli, firmware o impianti non sono verificati.
-- **Codice impianto diverso da `55555555`:** il codice impianto è inviato anche nel frame TCP di apertura sessione. Con il valore di fabbrica il frame è identico a quello catturato; con altri valori segue lo stesso formato ma **non è stato verificato** su una centrale reale. Se non funziona, apri una segnalazione.
+- **Codice impianto diverso da quello di fabbrica:** il codice impianto è inviato anche nel frame TCP di apertura sessione. Con il valore di fabbrica il frame è identico a quello catturato; con altri valori segue lo stesso formato ma **non è stato verificato** su una centrale reale. Se non funziona, apri una segnalazione.
 - **Inserimento totale** = frame verificato con tutti i settori (maschera `ff 00`). Impianti con più di 8 settori potrebbero comportarsi diversamente.
 - Valori di ingresso diversi da `00` e `02` (per esempio ingresso escluso, manomissione, allarme) non sono noti: guarda `raw_state` e segnalali.
 - Nelle prove sul mio impianto due ingressi (una porta doppia e un EIR wireless) non hanno mostrato variazioni di stato nei byte letti: la corrispondenza fra alcuni sensori wireless e ingressi potrebbe non essere diretta.
@@ -145,7 +145,7 @@ Apri una segnalazione indicando: modello e versione firmware (campo `cmodel` e `
 
 I test usano una centrale simulata e non hanno bisogno di hardware:
 ```
-python -I tests/test_fake_panel.py      # protocollo (usa le porte 80 e 5555 in locale)
+python -I tests/test_fake_panel.py      # protocollo (usa le porte di rete della centrale, in locale)
 python - < tests/test_ha_parts.py       # lato Home Assistant (serve il pacchetto homeassistant)
 ```
 Vedi `CHANGELOG.md` per la storia delle versioni. Licenza MIT.
