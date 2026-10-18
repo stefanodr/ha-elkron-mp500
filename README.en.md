@@ -32,7 +32,7 @@ DISARM opens a **numeric keypad** (services `elkron_mp500.keypad_press` and `key
 
 - **Partial** or per-sector arming, scenarios and outputs.
 - The panel's event history.
-- No user code is asked for or used to arm/disarm (see "Security").
+- The panel's own user code is not used: the disarm code is the Home Assistant one only (see "Disarm code").
 
 ## Requirements
 
