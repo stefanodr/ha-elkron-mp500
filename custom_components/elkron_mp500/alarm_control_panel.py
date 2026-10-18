@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import logging
+import time
+
+import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
     CodeFormat,
@@ -11,6 +14,7 @@ from homeassistant.components.alarm_control_panel import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -20,6 +24,9 @@ from .protocol import STATE_ARMED, STATE_DISARMED
 
 _LOGGER = logging.getLogger(__name__)
 
+KEYPAD_KEYS = "0123456789C"
+KEYPAD_TIMEOUT = 30  # seconds of inactivity before the typed digits are dropped
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -28,6 +35,13 @@ async def async_setup_entry(
 ) -> None:
     data = hass.data[DOMAIN][entry.entry_id]
     async_add_entities([ElkronAlarmPanel(data["coordinator"], data["client"], entry)])
+    # On-screen keypad used by the dashboard card: the digits live only in
+    # memory (never in the state machine or the recorder).
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        "keypad_press", {vol.Required("key"): vol.In(list(KEYPAD_KEYS))}, "async_keypad_press"
+    )
+    platform.async_register_entity_service("keypad_submit", {}, "async_keypad_submit")
 
 
 class ElkronAlarmPanel(CoordinatorEntity, AlarmControlPanelEntity):
@@ -42,6 +56,8 @@ class ElkronAlarmPanel(CoordinatorEntity, AlarmControlPanelEntity):
         self._client = client
         self._entry = entry
         self._limiter = AttemptLimiter()
+        self._digits = ""
+        self._digits_at = 0.0
         self._attr_unique_id = f"{entry.entry_id}_alarm"
         self.entity_id = ALARM_ENTITY_ID  # stable id
         self._attr_name = "Sistema"
@@ -60,6 +76,7 @@ class ElkronAlarmPanel(CoordinatorEntity, AlarmControlPanelEntity):
         return {
             "sessioni_aperte": self._client.bootstraps,
             "stato_grezzo": self.coordinator.data["global_state"].hex(" "),
+            "cifre_digitate": len(self._digits),
         }
 
     @property
@@ -115,3 +132,21 @@ class ElkronAlarmPanel(CoordinatorEntity, AlarmControlPanelEntity):
                 raise ServiceValidationError("Codice non valido: disinserimento non eseguito.")
             self._limiter.succeeded()
         await self._async_command("Disinserimento", self._client.disarm)
+
+    # ---- on-screen keypad -------------------------------------------------
+    def _fresh_digits(self) -> str:
+        if self._digits and time.monotonic() - self._digits_at > KEYPAD_TIMEOUT:
+            self._digits = ""
+        return self._digits
+
+    async def async_keypad_press(self, key: str) -> None:
+        digits = self._fresh_digits()
+        self._digits = "" if key == "C" else (digits + key)[:6]
+        self._digits_at = time.monotonic()
+        self.async_write_ha_state()
+
+    async def async_keypad_submit(self) -> None:
+        code = self._fresh_digits()
+        self._digits = ""
+        self.async_write_ha_state()
+        await self.async_alarm_disarm(code)

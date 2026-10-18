@@ -22,11 +22,21 @@ In **Impostazioni → Dispositivi e servizi → Elkron MP500 → Configura** puo
 
 È un blocco software: non protegge dai disinserimenti fatti con app, web o tastiera della centrale.
 
+## Card per la dashboard (facoltativa)
+
+In [`examples/dashboard_card.yaml`](examples/dashboard_card.yaml) c'è una card pronta: display con lo stato, pulsanti INSERISCI e DISINSERISCI e un riquadro per ogni ingresso con nome, stato e ultima variazione (toccando un riquadro si apre lo storico). Richiede da HACS: *button-card*, *stack-in-card*, *card-mod* e *Browser Mod*. Come usarla: Dashboard → Modifica → Aggiungi scheda → **Manuale** → incolla il contenuto del file. Se la tua centrale ha meno ingressi cancella i riquadri in più.
+
+DISINSERISCI apre un **tastierino numerico** (servizi `elkron_mp500.keypad_press` e `keypad_submit`): le cifre restano solo in memoria nell'integrazione e si azzerano dopo 30 secondi. Se hai impostato il codice di disinserimento viene controllato, altrimenti il disinserimento parte comunque.
+
 ## Cosa NON fa (per ora)
 
 - Inserimento **parziale** o per singolo settore, scenari e uscite.
 - Storico eventi della centrale.
 - Il codice utente dell'allarme non è richiesto né usato per inserire/disinserire (vedi "Sicurezza").
+
+## Card di esempio con tastierino
+
+In `examples/card_elkron_mp500.yaml` trovi una card Lovelace completa: display, LED, INSERISCI, DISINSERISCI con tastierino numerico e le tessere degli ingressi con storico. Richiede **button-card** e **Browser Mod** (HACS). Adatta i nomi degli ingressi e gli `entity_id` ai tuoi. Il tastierino usa i servizi `elkron_mp500.keypad_press` e `elkron_mp500.keypad_submit`: le cifre restano solo in memoria nell'integrazione, non in uno stato né nello storico, e si azzerano dopo 30 secondi. Non serve configurare nulla in `configuration.yaml`.
 
 ## Requisiti
 

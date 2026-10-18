@@ -1,0 +1,1275 @@
+# Elkron MP500 - esempio di card per la dashboard / example dashboard card
+# Richiede / requires: HACS -> button-card, stack-in-card, card-mod, Browser Mod.
+# - Nomi e stati degli ingressi vengono letti da Home Assistant / names and states come from Home Assistant.
+# - Se la tua centrale ha meno ingressi, cancella i riquadri in piu' / delete the extra tiles if you have fewer inputs.
+# - DISINSERISCI apre un tastierino: chiede il codice solo se lo hai impostato nelle Opzioni
+#   dell'integrazione / DISINSERISCI opens a keypad: the code is only checked if you set one in the options.
+type: custom:stack-in-card
+mode: vertical
+keep:
+  background: true
+  border_radius: true
+  margin: true
+  box_shadow: false
+card_mod:
+  style: "ha-card {\n  background: #171c27 !important;\n  border: 1px solid #343d50 !important;\n  border-radius: 16px !important;\n  padding: 12px !important;\n  box-shadow: none !important;\n  overflow:\
+    \ hidden;\n}\n"
+cards:
+- type: custom:button-card
+  entity: alarm_control_panel.elkron_mp500_sistema
+  name: DISINSERITO
+  label: ELKRON MP500
+  show_icon: false
+  show_state: false
+  show_label: true
+  tap_action:
+    action: more-info
+  styles:
+    card:
+    - background: linear-gradient(#0f2a3f,
+    - border: 2px solid
+    - border-radius: 10px
+    - box-shadow: inset 0 0 18px rgba(79,195,247,.2)
+    - padding: 12px 14px
+    grid:
+    - grid-template-areas: '"l" "n"'
+    - text-align: left
+    label:
+    - justify-self: start
+    - color: '#8fe3ff'
+    - font-size: 11px
+    - letter-spacing: 2px
+    - opacity: 0.8
+    - font-family: monospace
+    name:
+    - justify-self: start
+    - color: '#8fe3ff'
+    - font-size: 22px
+    - letter-spacing: 1px
+    - padding-top: 6px
+    - font-family: monospace
+  state:
+  - value: armed_away
+    name: INSERITO
+    styles:
+      name:
+      - color: '#ff8a80'
+  - value: armed_custom_bypass
+    name: INSERITO PARZIALE
+    styles:
+      name:
+      - color: '#ffe082'
+  - value: triggered
+    name: ALLARME
+    styles:
+      name:
+      - color: '#ff5252'
+  - value: unavailable
+    name: NON DISPONIBILE
+    styles:
+      name:
+      - color: '#ff8a80'
+- type: grid
+  columns: 3
+  square: false
+  card_mod:
+    style: "ha-card {\n  background: transparent !important;\n  border: none !important;\n  box-shadow: none !important;\n  padding: 0 !important;\n}\n#root {\n  gap: 6px !important;\n}\n"
+  cards:
+  - type: custom:button-card
+    entity: alarm_control_panel.elkron_mp500_sistema
+    name: RETE
+    icon: mdi:circle
+    show_state: false
+    tap_action:
+      action: none
+    styles:
+      card:
+      - background: transparent
+      - border: none
+      - box-shadow: none
+      - padding: 2px 0
+      grid:
+      - grid-template-areas: '"i" "n"'
+      - grid-template-rows: 14px min-content
+      icon:
+      - width: 12px
+      - color: '#2fd06b'
+      name:
+      - color: '#9ba8bd'
+      - font-size: 8px
+      - letter-spacing: 1px
+      - font-weight: bold
+    state:
+    - value: unavailable
+      styles:
+        icon:
+        - color: '#ff5252'
+  - type: custom:button-card
+    entity: alarm_control_panel.elkron_mp500_sistema
+    name: SISTEMA
+    icon: mdi:circle
+    show_state: false
+    tap_action:
+      action: none
+    styles:
+      card:
+      - background: transparent
+      - border: none
+      - box-shadow: none
+      - padding: 2px 0
+      grid:
+      - grid-template-areas: '"i" "n"'
+      - grid-template-rows: 14px min-content
+      icon:
+      - width: 12px
+      - color: '#2fd06b'
+      name:
+      - color: '#9ba8bd'
+      - font-size: 8px
+      - letter-spacing: 1px
+      - font-weight: bold
+    state:
+    - value: armed_away
+      styles:
+        icon:
+        - color: '#ff5252'
+    - value: armed_custom_bypass
+      styles:
+        icon:
+        - color: '#ffca28'
+    - value: triggered
+      styles:
+        icon:
+        - color: '#ff1744'
+    - value: unavailable
+      styles:
+        icon:
+        - color: '#6b7280'
+  - type: custom:button-card
+    entity: alarm_control_panel.elkron_mp500_sistema
+    name: GUASTO
+    icon: mdi:circle
+    show_state: false
+    tap_action:
+      action: none
+    styles:
+      card:
+      - background: transparent
+      - border: none
+      - box-shadow: none
+      - padding: 2px 0
+      grid:
+      - grid-template-areas: '"i" "n"'
+      - grid-template-rows: 14px min-content
+      icon:
+      - width: 12px
+      - color: '#4b5563'
+      name:
+      - color: '#9ba8bd'
+      - font-size: 8px
+      - letter-spacing: 1px
+      - font-weight: bold
+    state:
+    - value: unavailable
+      styles:
+        icon:
+        - color: '#ff5252'
+- type: grid
+  columns: 2
+  square: false
+  card_mod:
+    style: "ha-card {\n  background: transparent !important;\n  border: none !important;\n  box-shadow: none !important;\n  padding: 0 !important;\n}\n#root {\n  gap: 6px !important;\n}\n"
+  cards:
+  - type: custom:button-card
+    name: INSERISCI
+    show_icon: false
+    tap_action:
+      action: perform-action
+      perform_action: alarm_control_panel.alarm_arm_away
+      target:
+        entity_id: alarm_control_panel.elkron_mp500_sistema
+      confirmation:
+        text: Inserire l'allarme (tutto l'impianto)?
+    styles:
+      card:
+      - background: linear-gradient(#ff6a55,
+      - border: none
+      - border-radius: 10px
+      - box-shadow: 0 2px 0 rgba(0,0,0,.35)
+      - height: 42px
+      - padding: 0
+      name:
+      - color: white
+      - font-size: 11px
+      - font-weight: bold
+      - letter-spacing: 1px
+  - type: custom:button-card
+    name: DISINSERISCI
+    show_icon: false
+    tap_action:
+      action: fire-dom-event
+      browser_mod:
+        service: browser_mod.popup
+        data:
+          title: Disinserisci allarme
+          size: normal
+          dismissable: true
+          content:
+            type: vertical-stack
+            cards:
+            - type: custom:button-card
+              entity: alarm_control_panel.elkron_mp500_sistema
+              show_icon: false
+              show_name: false
+              show_state: true
+              tap_action:
+                action: none
+              state_display: '[[[ var n = Number(entity.attributes.cifre_digitate || 0); return n ? ''●''.repeat(n) : ''Inserisci il codice''; ]]]
+
+                '
+              styles:
+                card:
+                - background: transparent
+                - border: none
+                - height: 56px
+                state:
+                - font-size: 26px
+                - letter-spacing: 6px
+            - type: grid
+              columns: 3
+              square: false
+              cards:
+              - type: custom:button-card
+                name: '1'
+                show_icon: false
+                tap_action:
+                  action: perform-action
+                  perform_action: elkron_mp500.keypad_press
+                  target:
+                    entity_id: alarm_control_panel.elkron_mp500_sistema
+                  data:
+                    key: '1'
+                styles:
+                  card:
+                  - background: null
+                  - border-radius: 14px
+                  - height: 56px
+                  name:
+                  - font-size: 22px
+                  - font-weight: bold
+              - type: custom:button-card
+                name: '2'
+                show_icon: false
+                tap_action:
+                  action: perform-action
+                  perform_action: elkron_mp500.keypad_press
+                  target:
+                    entity_id: alarm_control_panel.elkron_mp500_sistema
+                  data:
+                    key: '2'
+                styles:
+                  card:
+                  - background: null
+                  - border-radius: 14px
+                  - height: 56px
+                  name:
+                  - font-size: 22px
+                  - font-weight: bold
+              - type: custom:button-card
+                name: '3'
+                show_icon: false
+                tap_action:
+                  action: perform-action
+                  perform_action: elkron_mp500.keypad_press
+                  target:
+                    entity_id: alarm_control_panel.elkron_mp500_sistema
+                  data:
+                    key: '3'
+                styles:
+                  card:
+                  - background: null
+                  - border-radius: 14px
+                  - height: 56px
+                  name:
+                  - font-size: 22px
+                  - font-weight: bold
+              - type: custom:button-card
+                name: '4'
+                show_icon: false
+                tap_action:
+                  action: perform-action
+                  perform_action: elkron_mp500.keypad_press
+                  target:
+                    entity_id: alarm_control_panel.elkron_mp500_sistema
+                  data:
+                    key: '4'
+                styles:
+                  card:
+                  - background: null
+                  - border-radius: 14px
+                  - height: 56px
+                  name:
+                  - font-size: 22px
+                  - font-weight: bold
+              - type: custom:button-card
+                name: '5'
+                show_icon: false
+                tap_action:
+                  action: perform-action
+                  perform_action: elkron_mp500.keypad_press
+                  target:
+                    entity_id: alarm_control_panel.elkron_mp500_sistema
+                  data:
+                    key: '5'
+                styles:
+                  card:
+                  - background: null
+                  - border-radius: 14px
+                  - height: 56px
+                  name:
+                  - font-size: 22px
+                  - font-weight: bold
+              - type: custom:button-card
+                name: '6'
+                show_icon: false
+                tap_action:
+                  action: perform-action
+                  perform_action: elkron_mp500.keypad_press
+                  target:
+                    entity_id: alarm_control_panel.elkron_mp500_sistema
+                  data:
+                    key: '6'
+                styles:
+                  card:
+                  - background: null
+                  - border-radius: 14px
+                  - height: 56px
+                  name:
+                  - font-size: 22px
+                  - font-weight: bold
+              - type: custom:button-card
+                name: '7'
+                show_icon: false
+                tap_action:
+                  action: perform-action
+                  perform_action: elkron_mp500.keypad_press
+                  target:
+                    entity_id: alarm_control_panel.elkron_mp500_sistema
+                  data:
+                    key: '7'
+                styles:
+                  card:
+                  - background: null
+                  - border-radius: 14px
+                  - height: 56px
+                  name:
+                  - font-size: 22px
+                  - font-weight: bold
+              - type: custom:button-card
+                name: '8'
+                show_icon: false
+                tap_action:
+                  action: perform-action
+                  perform_action: elkron_mp500.keypad_press
+                  target:
+                    entity_id: alarm_control_panel.elkron_mp500_sistema
+                  data:
+                    key: '8'
+                styles:
+                  card:
+                  - background: null
+                  - border-radius: 14px
+                  - height: 56px
+                  name:
+                  - font-size: 22px
+                  - font-weight: bold
+              - type: custom:button-card
+                name: '9'
+                show_icon: false
+                tap_action:
+                  action: perform-action
+                  perform_action: elkron_mp500.keypad_press
+                  target:
+                    entity_id: alarm_control_panel.elkron_mp500_sistema
+                  data:
+                    key: '9'
+                styles:
+                  card:
+                  - background: null
+                  - border-radius: 14px
+                  - height: 56px
+                  name:
+                  - font-size: 22px
+                  - font-weight: bold
+              - type: custom:button-card
+                name: C
+                show_icon: false
+                tap_action:
+                  action: perform-action
+                  perform_action: elkron_mp500.keypad_press
+                  target:
+                    entity_id: alarm_control_panel.elkron_mp500_sistema
+                  data:
+                    key: C
+                styles:
+                  card:
+                  - background: null
+                  - border-radius: 14px
+                  - height: 56px
+                  name:
+                  - font-size: 22px
+                  - font-weight: bold
+              - type: custom:button-card
+                name: '0'
+                show_icon: false
+                tap_action:
+                  action: perform-action
+                  perform_action: elkron_mp500.keypad_press
+                  target:
+                    entity_id: alarm_control_panel.elkron_mp500_sistema
+                  data:
+                    key: '0'
+                styles:
+                  card:
+                  - background: null
+                  - border-radius: 14px
+                  - height: 56px
+                  name:
+                  - font-size: 22px
+                  - font-weight: bold
+              - type: custom:button-card
+                name: ✓
+                show_icon: false
+                tap_action:
+                  action: perform-action
+                  perform_action: elkron_mp500.keypad_submit
+                  target:
+                    entity_id: alarm_control_panel.elkron_mp500_sistema
+                styles:
+                  card:
+                  - background: null
+                  - border-radius: 14px
+                  - height: 56px
+                  name:
+                  - font-size: 22px
+                  - font-weight: bold
+    styles:
+      card:
+      - background: linear-gradient(#3fd98a,
+      - border: none
+      - border-radius: 10px
+      - box-shadow: 0 2px 0 rgba(0,0,0,.35)
+      - height: 42px
+      - padding: 0
+      name:
+      - color: white
+      - font-size: 11px
+      - font-weight: bold
+      - letter-spacing: 1px
+- type: grid
+  columns: 3
+  square: false
+  card_mod:
+    style: "ha-card {\n  background: transparent !important;\n  border: none !important;\n  box-shadow: none !important;\n  padding: 0 !important;\n}\n#root {\n  gap: 6px !important;\n}\n"
+  cards:
+  - type: custom:button-card
+    entity: binary_sensor.elkron_mp500_ingresso_1
+    name: '[[[ var m = (entity.attributes.friendly_name || '''').match(/\((.*)\)/); return m ? m[1] : ''Ingresso 1''; ]]]'
+    show_state: true
+    show_last_changed: true
+    tap_action:
+      action: fire-dom-event
+      browser_mod:
+        service: browser_mod.popup
+        data:
+          title: Ingresso 1
+          size: normal
+          dismissable: true
+          content:
+            type: vertical-stack
+            cards:
+            - type: history-graph
+              hours_to_show: 24
+              entities:
+              - binary_sensor.elkron_mp500_ingresso_1
+            - type: logbook
+              hours_to_show: 72
+              entities:
+              - binary_sensor.elkron_mp500_ingresso_1
+    hold_action:
+      action: more-info
+    styles:
+      card:
+      - background: transparent
+      - border: 1px solid
+      - border-radius: 8px
+      - box-shadow: none
+      - padding: 4px 2px
+      - height: 86px
+      grid:
+      - grid-template-areas: '"i" "n" "s" "l"'
+      - grid-template-rows: 24px min-content min-content min-content
+      icon:
+      - width: 21px
+      - color: '#9ca3af'
+      name:
+      - color: '#e5e7eb'
+      - font-size: 9px
+      - font-weight: bold
+      - text-align: center
+      - white-space: normal
+      state:
+      - color: '#9ca3af'
+      - font-size: 9px
+      - font-weight: bold
+      last_changed:
+      - color: '#6b7587'
+      - font-size: 8px
+      - padding-top: 2px
+    state:
+    - value: 'off'
+      state_display: CHIUSO
+    - value: 'on'
+      state_display: APERTO
+      styles:
+        card:
+        - background: '#39321d'
+        - border: 1px solid
+        icon:
+        - color: '#ffca28'
+        state:
+        - color: '#ffca28'
+    - value: unavailable
+      state_display: NON DISP.
+      icon: mdi:alert-circle
+      styles:
+        card:
+        - background: '#351f25'
+        - border: 1px solid
+        icon:
+        - color: '#ff5252'
+        state:
+        - color: '#ff5252'
+    - value: unknown
+      state_display: NON DISP.
+      icon: mdi:alert-circle
+      styles:
+        card:
+        - background: '#351f25'
+        - border: 1px solid
+        icon:
+        - color: '#ff5252'
+        state:
+        - color: '#ff5252'
+  - type: custom:button-card
+    entity: binary_sensor.elkron_mp500_ingresso_2
+    name: '[[[ var m = (entity.attributes.friendly_name || '''').match(/\((.*)\)/); return m ? m[1] : ''Ingresso 2''; ]]]'
+    show_state: true
+    show_last_changed: true
+    tap_action:
+      action: fire-dom-event
+      browser_mod:
+        service: browser_mod.popup
+        data:
+          title: Ingresso 2
+          size: normal
+          dismissable: true
+          content:
+            type: vertical-stack
+            cards:
+            - type: history-graph
+              hours_to_show: 24
+              entities:
+              - binary_sensor.elkron_mp500_ingresso_2
+            - type: logbook
+              hours_to_show: 72
+              entities:
+              - binary_sensor.elkron_mp500_ingresso_2
+    hold_action:
+      action: more-info
+    styles:
+      card:
+      - background: transparent
+      - border: 1px solid
+      - border-radius: 8px
+      - box-shadow: none
+      - padding: 4px 2px
+      - height: 86px
+      grid:
+      - grid-template-areas: '"i" "n" "s" "l"'
+      - grid-template-rows: 24px min-content min-content min-content
+      icon:
+      - width: 21px
+      - color: '#9ca3af'
+      name:
+      - color: '#e5e7eb'
+      - font-size: 9px
+      - font-weight: bold
+      - text-align: center
+      - white-space: normal
+      state:
+      - color: '#9ca3af'
+      - font-size: 9px
+      - font-weight: bold
+      last_changed:
+      - color: '#6b7587'
+      - font-size: 8px
+      - padding-top: 2px
+    state:
+    - value: 'off'
+      state_display: CHIUSO
+    - value: 'on'
+      state_display: APERTO
+      styles:
+        card:
+        - background: '#39321d'
+        - border: 1px solid
+        icon:
+        - color: '#ffca28'
+        state:
+        - color: '#ffca28'
+    - value: unavailable
+      state_display: NON DISP.
+      icon: mdi:alert-circle
+      styles:
+        card:
+        - background: '#351f25'
+        - border: 1px solid
+        icon:
+        - color: '#ff5252'
+        state:
+        - color: '#ff5252'
+    - value: unknown
+      state_display: NON DISP.
+      icon: mdi:alert-circle
+      styles:
+        card:
+        - background: '#351f25'
+        - border: 1px solid
+        icon:
+        - color: '#ff5252'
+        state:
+        - color: '#ff5252'
+  - type: custom:button-card
+    entity: binary_sensor.elkron_mp500_ingresso_3
+    name: '[[[ var m = (entity.attributes.friendly_name || '''').match(/\((.*)\)/); return m ? m[1] : ''Ingresso 3''; ]]]'
+    show_state: true
+    show_last_changed: true
+    tap_action:
+      action: fire-dom-event
+      browser_mod:
+        service: browser_mod.popup
+        data:
+          title: Ingresso 3
+          size: normal
+          dismissable: true
+          content:
+            type: vertical-stack
+            cards:
+            - type: history-graph
+              hours_to_show: 24
+              entities:
+              - binary_sensor.elkron_mp500_ingresso_3
+            - type: logbook
+              hours_to_show: 72
+              entities:
+              - binary_sensor.elkron_mp500_ingresso_3
+    hold_action:
+      action: more-info
+    styles:
+      card:
+      - background: transparent
+      - border: 1px solid
+      - border-radius: 8px
+      - box-shadow: none
+      - padding: 4px 2px
+      - height: 86px
+      grid:
+      - grid-template-areas: '"i" "n" "s" "l"'
+      - grid-template-rows: 24px min-content min-content min-content
+      icon:
+      - width: 21px
+      - color: '#9ca3af'
+      name:
+      - color: '#e5e7eb'
+      - font-size: 9px
+      - font-weight: bold
+      - text-align: center
+      - white-space: normal
+      state:
+      - color: '#9ca3af'
+      - font-size: 9px
+      - font-weight: bold
+      last_changed:
+      - color: '#6b7587'
+      - font-size: 8px
+      - padding-top: 2px
+    state:
+    - value: 'off'
+      state_display: CHIUSO
+    - value: 'on'
+      state_display: APERTO
+      styles:
+        card:
+        - background: '#39321d'
+        - border: 1px solid
+        icon:
+        - color: '#ffca28'
+        state:
+        - color: '#ffca28'
+    - value: unavailable
+      state_display: NON DISP.
+      icon: mdi:alert-circle
+      styles:
+        card:
+        - background: '#351f25'
+        - border: 1px solid
+        icon:
+        - color: '#ff5252'
+        state:
+        - color: '#ff5252'
+    - value: unknown
+      state_display: NON DISP.
+      icon: mdi:alert-circle
+      styles:
+        card:
+        - background: '#351f25'
+        - border: 1px solid
+        icon:
+        - color: '#ff5252'
+        state:
+        - color: '#ff5252'
+  - type: custom:button-card
+    entity: binary_sensor.elkron_mp500_ingresso_4
+    name: '[[[ var m = (entity.attributes.friendly_name || '''').match(/\((.*)\)/); return m ? m[1] : ''Ingresso 4''; ]]]'
+    show_state: true
+    show_last_changed: true
+    tap_action:
+      action: fire-dom-event
+      browser_mod:
+        service: browser_mod.popup
+        data:
+          title: Ingresso 4
+          size: normal
+          dismissable: true
+          content:
+            type: vertical-stack
+            cards:
+            - type: history-graph
+              hours_to_show: 24
+              entities:
+              - binary_sensor.elkron_mp500_ingresso_4
+            - type: logbook
+              hours_to_show: 72
+              entities:
+              - binary_sensor.elkron_mp500_ingresso_4
+    hold_action:
+      action: more-info
+    styles:
+      card:
+      - background: transparent
+      - border: 1px solid
+      - border-radius: 8px
+      - box-shadow: none
+      - padding: 4px 2px
+      - height: 86px
+      grid:
+      - grid-template-areas: '"i" "n" "s" "l"'
+      - grid-template-rows: 24px min-content min-content min-content
+      icon:
+      - width: 21px
+      - color: '#9ca3af'
+      name:
+      - color: '#e5e7eb'
+      - font-size: 9px
+      - font-weight: bold
+      - text-align: center
+      - white-space: normal
+      state:
+      - color: '#9ca3af'
+      - font-size: 9px
+      - font-weight: bold
+      last_changed:
+      - color: '#6b7587'
+      - font-size: 8px
+      - padding-top: 2px
+    state:
+    - value: 'off'
+      state_display: CHIUSO
+    - value: 'on'
+      state_display: APERTO
+      styles:
+        card:
+        - background: '#39321d'
+        - border: 1px solid
+        icon:
+        - color: '#ffca28'
+        state:
+        - color: '#ffca28'
+    - value: unavailable
+      state_display: NON DISP.
+      icon: mdi:alert-circle
+      styles:
+        card:
+        - background: '#351f25'
+        - border: 1px solid
+        icon:
+        - color: '#ff5252'
+        state:
+        - color: '#ff5252'
+    - value: unknown
+      state_display: NON DISP.
+      icon: mdi:alert-circle
+      styles:
+        card:
+        - background: '#351f25'
+        - border: 1px solid
+        icon:
+        - color: '#ff5252'
+        state:
+        - color: '#ff5252'
+  - type: custom:button-card
+    entity: binary_sensor.elkron_mp500_ingresso_5
+    name: '[[[ var m = (entity.attributes.friendly_name || '''').match(/\((.*)\)/); return m ? m[1] : ''Ingresso 5''; ]]]'
+    show_state: true
+    show_last_changed: true
+    tap_action:
+      action: fire-dom-event
+      browser_mod:
+        service: browser_mod.popup
+        data:
+          title: Ingresso 5
+          size: normal
+          dismissable: true
+          content:
+            type: vertical-stack
+            cards:
+            - type: history-graph
+              hours_to_show: 24
+              entities:
+              - binary_sensor.elkron_mp500_ingresso_5
+            - type: logbook
+              hours_to_show: 72
+              entities:
+              - binary_sensor.elkron_mp500_ingresso_5
+    hold_action:
+      action: more-info
+    styles:
+      card:
+      - background: transparent
+      - border: 1px solid
+      - border-radius: 8px
+      - box-shadow: none
+      - padding: 4px 2px
+      - height: 86px
+      grid:
+      - grid-template-areas: '"i" "n" "s" "l"'
+      - grid-template-rows: 24px min-content min-content min-content
+      icon:
+      - width: 21px
+      - color: '#9ca3af'
+      name:
+      - color: '#e5e7eb'
+      - font-size: 9px
+      - font-weight: bold
+      - text-align: center
+      - white-space: normal
+      state:
+      - color: '#9ca3af'
+      - font-size: 9px
+      - font-weight: bold
+      last_changed:
+      - color: '#6b7587'
+      - font-size: 8px
+      - padding-top: 2px
+    state:
+    - value: 'off'
+      state_display: CHIUSO
+    - value: 'on'
+      state_display: APERTO
+      styles:
+        card:
+        - background: '#39321d'
+        - border: 1px solid
+        icon:
+        - color: '#ffca28'
+        state:
+        - color: '#ffca28'
+    - value: unavailable
+      state_display: NON DISP.
+      icon: mdi:alert-circle
+      styles:
+        card:
+        - background: '#351f25'
+        - border: 1px solid
+        icon:
+        - color: '#ff5252'
+        state:
+        - color: '#ff5252'
+    - value: unknown
+      state_display: NON DISP.
+      icon: mdi:alert-circle
+      styles:
+        card:
+        - background: '#351f25'
+        - border: 1px solid
+        icon:
+        - color: '#ff5252'
+        state:
+        - color: '#ff5252'
+  - type: custom:button-card
+    entity: binary_sensor.elkron_mp500_ingresso_6
+    name: '[[[ var m = (entity.attributes.friendly_name || '''').match(/\((.*)\)/); return m ? m[1] : ''Ingresso 6''; ]]]'
+    show_state: true
+    show_last_changed: true
+    tap_action:
+      action: fire-dom-event
+      browser_mod:
+        service: browser_mod.popup
+        data:
+          title: Ingresso 6
+          size: normal
+          dismissable: true
+          content:
+            type: vertical-stack
+            cards:
+            - type: history-graph
+              hours_to_show: 24
+              entities:
+              - binary_sensor.elkron_mp500_ingresso_6
+            - type: logbook
+              hours_to_show: 72
+              entities:
+              - binary_sensor.elkron_mp500_ingresso_6
+    hold_action:
+      action: more-info
+    styles:
+      card:
+      - background: transparent
+      - border: 1px solid
+      - border-radius: 8px
+      - box-shadow: none
+      - padding: 4px 2px
+      - height: 86px
+      grid:
+      - grid-template-areas: '"i" "n" "s" "l"'
+      - grid-template-rows: 24px min-content min-content min-content
+      icon:
+      - width: 21px
+      - color: '#9ca3af'
+      name:
+      - color: '#e5e7eb'
+      - font-size: 9px
+      - font-weight: bold
+      - text-align: center
+      - white-space: normal
+      state:
+      - color: '#9ca3af'
+      - font-size: 9px
+      - font-weight: bold
+      last_changed:
+      - color: '#6b7587'
+      - font-size: 8px
+      - padding-top: 2px
+    state:
+    - value: 'off'
+      state_display: CHIUSO
+    - value: 'on'
+      state_display: APERTO
+      styles:
+        card:
+        - background: '#39321d'
+        - border: 1px solid
+        icon:
+        - color: '#ffca28'
+        state:
+        - color: '#ffca28'
+    - value: unavailable
+      state_display: NON DISP.
+      icon: mdi:alert-circle
+      styles:
+        card:
+        - background: '#351f25'
+        - border: 1px solid
+        icon:
+        - color: '#ff5252'
+        state:
+        - color: '#ff5252'
+    - value: unknown
+      state_display: NON DISP.
+      icon: mdi:alert-circle
+      styles:
+        card:
+        - background: '#351f25'
+        - border: 1px solid
+        icon:
+        - color: '#ff5252'
+        state:
+        - color: '#ff5252'
+  - type: custom:button-card
+    entity: binary_sensor.elkron_mp500_ingresso_7
+    name: '[[[ var m = (entity.attributes.friendly_name || '''').match(/\((.*)\)/); return m ? m[1] : ''Ingresso 7''; ]]]'
+    show_state: true
+    show_last_changed: true
+    tap_action:
+      action: fire-dom-event
+      browser_mod:
+        service: browser_mod.popup
+        data:
+          title: Ingresso 7
+          size: normal
+          dismissable: true
+          content:
+            type: vertical-stack
+            cards:
+            - type: history-graph
+              hours_to_show: 24
+              entities:
+              - binary_sensor.elkron_mp500_ingresso_7
+            - type: logbook
+              hours_to_show: 72
+              entities:
+              - binary_sensor.elkron_mp500_ingresso_7
+    hold_action:
+      action: more-info
+    styles:
+      card:
+      - background: transparent
+      - border: 1px solid
+      - border-radius: 8px
+      - box-shadow: none
+      - padding: 4px 2px
+      - height: 86px
+      grid:
+      - grid-template-areas: '"i" "n" "s" "l"'
+      - grid-template-rows: 24px min-content min-content min-content
+      icon:
+      - width: 21px
+      - color: '#9ca3af'
+      name:
+      - color: '#e5e7eb'
+      - font-size: 9px
+      - font-weight: bold
+      - text-align: center
+      - white-space: normal
+      state:
+      - color: '#9ca3af'
+      - font-size: 9px
+      - font-weight: bold
+      last_changed:
+      - color: '#6b7587'
+      - font-size: 8px
+      - padding-top: 2px
+    state:
+    - value: 'off'
+      state_display: CHIUSO
+    - value: 'on'
+      state_display: APERTO
+      styles:
+        card:
+        - background: '#39321d'
+        - border: 1px solid
+        icon:
+        - color: '#ffca28'
+        state:
+        - color: '#ffca28'
+    - value: unavailable
+      state_display: NON DISP.
+      icon: mdi:alert-circle
+      styles:
+        card:
+        - background: '#351f25'
+        - border: 1px solid
+        icon:
+        - color: '#ff5252'
+        state:
+        - color: '#ff5252'
+    - value: unknown
+      state_display: NON DISP.
+      icon: mdi:alert-circle
+      styles:
+        card:
+        - background: '#351f25'
+        - border: 1px solid
+        icon:
+        - color: '#ff5252'
+        state:
+        - color: '#ff5252'
+  - type: custom:button-card
+    entity: binary_sensor.elkron_mp500_ingresso_8
+    name: '[[[ var m = (entity.attributes.friendly_name || '''').match(/\((.*)\)/); return m ? m[1] : ''Ingresso 8''; ]]]'
+    show_state: true
+    show_last_changed: true
+    tap_action:
+      action: fire-dom-event
+      browser_mod:
+        service: browser_mod.popup
+        data:
+          title: Ingresso 8
+          size: normal
+          dismissable: true
+          content:
+            type: vertical-stack
+            cards:
+            - type: history-graph
+              hours_to_show: 24
+              entities:
+              - binary_sensor.elkron_mp500_ingresso_8
+            - type: logbook
+              hours_to_show: 72
+              entities:
+              - binary_sensor.elkron_mp500_ingresso_8
+    hold_action:
+      action: more-info
+    styles:
+      card:
+      - background: transparent
+      - border: 1px solid
+      - border-radius: 8px
+      - box-shadow: none
+      - padding: 4px 2px
+      - height: 86px
+      grid:
+      - grid-template-areas: '"i" "n" "s" "l"'
+      - grid-template-rows: 24px min-content min-content min-content
+      icon:
+      - width: 21px
+      - color: '#9ca3af'
+      name:
+      - color: '#e5e7eb'
+      - font-size: 9px
+      - font-weight: bold
+      - text-align: center
+      - white-space: normal
+      state:
+      - color: '#9ca3af'
+      - font-size: 9px
+      - font-weight: bold
+      last_changed:
+      - color: '#6b7587'
+      - font-size: 8px
+      - padding-top: 2px
+    state:
+    - value: 'off'
+      state_display: CHIUSO
+    - value: 'on'
+      state_display: APERTO
+      styles:
+        card:
+        - background: '#39321d'
+        - border: 1px solid
+        icon:
+        - color: '#ffca28'
+        state:
+        - color: '#ffca28'
+    - value: unavailable
+      state_display: NON DISP.
+      icon: mdi:alert-circle
+      styles:
+        card:
+        - background: '#351f25'
+        - border: 1px solid
+        icon:
+        - color: '#ff5252'
+        state:
+        - color: '#ff5252'
+    - value: unknown
+      state_display: NON DISP.
+      icon: mdi:alert-circle
+      styles:
+        card:
+        - background: '#351f25'
+        - border: 1px solid
+        icon:
+        - color: '#ff5252'
+        state:
+        - color: '#ff5252'
+  - type: custom:button-card
+    entity: binary_sensor.elkron_mp500_ingresso_9
+    name: '[[[ var m = (entity.attributes.friendly_name || '''').match(/\((.*)\)/); return m ? m[1] : ''Ingresso 9''; ]]]'
+    show_state: true
+    show_last_changed: true
+    tap_action:
+      action: fire-dom-event
+      browser_mod:
+        service: browser_mod.popup
+        data:
+          title: Ingresso 9
+          size: normal
+          dismissable: true
+          content:
+            type: vertical-stack
+            cards:
+            - type: history-graph
+              hours_to_show: 24
+              entities:
+              - binary_sensor.elkron_mp500_ingresso_9
+            - type: logbook
+              hours_to_show: 72
+              entities:
+              - binary_sensor.elkron_mp500_ingresso_9
+    hold_action:
+      action: more-info
+    styles:
+      card:
+      - background: transparent
+      - border: 1px solid
+      - border-radius: 8px
+      - box-shadow: none
+      - padding: 4px 2px
+      - height: 86px
+      grid:
+      - grid-template-areas: '"i" "n" "s" "l"'
+      - grid-template-rows: 24px min-content min-content min-content
+      icon:
+      - width: 21px
+      - color: '#9ca3af'
+      name:
+      - color: '#e5e7eb'
+      - font-size: 9px
+      - font-weight: bold
+      - text-align: center
+      - white-space: normal
+      state:
+      - color: '#9ca3af'
+      - font-size: 9px
+      - font-weight: bold
+      last_changed:
+      - color: '#6b7587'
+      - font-size: 8px
+      - padding-top: 2px
+    state:
+    - value: 'off'
+      state_display: CHIUSO
+    - value: 'on'
+      state_display: APERTO
+      styles:
+        card:
+        - background: '#39321d'
+        - border: 1px solid
+        icon:
+        - color: '#ffca28'
+        state:
+        - color: '#ffca28'
+    - value: unavailable
+      state_display: NON DISP.
+      icon: mdi:alert-circle
+      styles:
+        card:
+        - background: '#351f25'
+        - border: 1px solid
+        icon:
+        - color: '#ff5252'
+        state:
+        - color: '#ff5252'
+    - value: unknown
+      state_display: NON DISP.
+      icon: mdi:alert-circle
+      styles:
+        card:
+        - background: '#351f25'
+        - border: 1px solid
+        icon:
+        - color: '#ff5252'
+        state:
+        - color: '#ff5252'

@@ -1,0 +1,16 @@
+keypad_press:
+  target:
+    entity:
+      integration: elkron_mp500
+      domain: alarm_control_panel
+  fields:
+    key:
+      required: true
+      example: "5"
+      selector:
+        text:
+keypad_submit:
+  target:
+    entity:
+      integration: elkron_mp500
+      domain: alarm_control_panel

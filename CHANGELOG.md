@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.1
+- Tastierino a schermo per la card: servizi `elkron_mp500.keypad_press` e `elkron_mp500.keypad_submit`. Le cifre restano solo in memoria (mai nello stato o nello storico), si azzerano dopo 30 secondi e il contatore è nell'attributo `cifre_digitate`. Non serve nessun helper.
+- Card di esempio pronta in `examples/dashboard_card.yaml`.
+
 ## 1.5.0
 - Codice di disinserimento facoltativo a 6 cifre, scelto dall'utente in Opzioni e gestito solo da Home Assistant (la centrale non lo conosce). Salvato solo come hash PBKDF2 con salt.
 - Inserimento sempre senza codice. Senza codice impostato il comportamento è invariato.

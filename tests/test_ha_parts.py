@@ -123,7 +123,7 @@ async def main():
     coordinator.data = {"inputs": [0] * 9, "global_state": b"\x00\x00"}
     panel = alarm_control_panel.ElkronAlarmPanel(coordinator, client, SimpleNamespace(entry_id="e1"))
     assert panel.entity_id == "alarm_control_panel.elkron_mp500_sistema"
-    assert panel.extra_state_attributes == {"sessioni_aperte": 3, "stato_grezzo": "00 00"}
+    assert panel.extra_state_attributes == {"sessioni_aperte": 3, "stato_grezzo": "00 00", "cifre_digitate": 0}
     A = alarm_control_panel.AlarmControlPanelState
     assert panel.state == A.DISARMED
     coordinator.data["global_state"] = b"\xff\x00"
@@ -315,3 +315,26 @@ async def _gate():
 
 import asyncio as _a
 _a.run(_gate())
+
+
+async def _keypad():
+    client = MagicMock(); client.model = "x"; client.disarm = AsyncMock()
+    coord = MagicMock(); coord.async_request_refresh = AsyncMock()
+    coord.data = {"global_state": b"\xff\x00"}
+    s, h = hash_code("123456")
+    entry = _N(entry_id="e", options={CONF_DISARM_SALT: s, CONF_DISARM_HASH: h}, data={})
+    ent = ElkronAlarmPanel(coord, client, entry); ent.async_write_ha_state = lambda: None
+    for k in "1234567": await ent.async_keypad_press(k)
+    assert ent.extra_state_attributes["cifre_digitate"] == 6   # capped at 6
+    await ent.async_keypad_press("C"); assert ent.extra_state_attributes["cifre_digitate"] == 0
+    for k in "123456": await ent.async_keypad_press(k)
+    await ent.async_keypad_submit()
+    client.disarm.assert_awaited_once(); assert ent._digits == ""
+    for k in "111111": await ent.async_keypad_press(k)
+    try:
+        await ent.async_keypad_submit(); raise SystemExit("accepted wrong")
+    except ServiceValidationError: pass
+    assert client.disarm.await_count == 1 and ent._digits == ""
+    print("keypad OK")
+
+_a.run(_keypad())
