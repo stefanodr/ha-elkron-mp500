@@ -24,7 +24,7 @@ This is a software gate: it does not protect against disarming from the app, the
 
 ## Dashboard card (optional)
 
-[`examples/dashboard_card.yaml`](examples/dashboard_card.yaml) is a ready-made card: a status display, ARM and DISARM buttons and a tile for every input with name, state and last change (tap a tile for its history). It needs these HACS frontend add-ons: *button-card*, *stack-in-card*, *card-mod* and *Browser Mod*. To use it: Dashboard → Edit → Add card → **Manual** → paste the file content. If your panel has fewer inputs, delete the extra tiles.
+[`examples/dashboard_card.yaml`](examples/dashboard_card.yaml) is a ready-made card: a status display, ARM and DISARM buttons and a tile for every input with name, state and last change (tap a tile for its history). It needs four components installed first from HACS → Frontend: **button-card** (custom-cards/button-card), **stack-in-card** (custom-cards/stack-in-card), **card-mod** (thomasloven/lovelace-card-mod) and **Browser Mod** (thomasloven/hass-browser_mod; it also needs its integration). To use it: Dashboard → Edit → Add card → **Manual** → paste the file content. If your panel has fewer inputs, delete the extra tiles.
 
 DISARM opens a **numeric keypad** (services `elkron_mp500.keypad_press` and `keypad_submit`): the digits only live in the integration's memory and are dropped after 30 seconds. With the right code the popup closes by itself; with a wrong one it stays open and shows the error. If you set a disarm code it is checked, otherwise disarming goes through anyway.
 
@@ -33,10 +33,6 @@ DISARM opens a **numeric keypad** (services `elkron_mp500.keypad_press` and `key
 - **Partial** or per-sector arming, scenarios and outputs.
 - The panel's event history.
 - No user code is asked for or used to arm/disarm (see "Security").
-
-## Example card with keypad
-
-`examples/card_elkron_mp500.yaml` is a complete Lovelace card: display, LED, ARM, DISARM with a numeric keypad, and the input tiles with history. It needs **button-card** and **Browser Mod** (HACS). Adapt the input names and `entity_id`s to yours. The keypad uses the `elkron_mp500.keypad_press` and `elkron_mp500.keypad_submit` services: the digits stay only in the integration's memory, never in a state or the history, and are dropped after 30 seconds. Nothing is needed in `configuration.yaml`.
 
 ## Requirements
 
