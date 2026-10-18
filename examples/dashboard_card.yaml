@@ -174,258 +174,295 @@ cards:
       - font-size: 11px
       - font-weight: bold
       - letter-spacing: 1px
-  - type: custom:button-card
-    name: DISINSERISCI
-    show_icon: false
-    tap_action:
-      action: fire-dom-event
-      browser_mod:
-        service: browser_mod.popup
-        data:
-          title: Disinserisci allarme
-          size: normal
-          dismissable: true
-          content:
-            type: vertical-stack
-            cards:
-            - type: markdown
-              content: <center><h1>{% set n = state_attr('alarm_control_panel.elkron_mp500_sistema','cifre_digitate') | int(0) %}{{ '●' * n if n else 'Inserisci il codice' }}</h1></center>
-            - type: grid
-              columns: 3
-              square: false
+  - type: conditional
+    conditions:
+    - condition: state
+      entity: alarm_control_panel.elkron_mp500_sistema
+      attribute: code_format
+      state: number
+    card:
+      type: custom:button-card
+      name: DISINSERISCI
+      show_icon: false
+      tap_action:
+        action: fire-dom-event
+        browser_mod:
+          service: browser_mod.popup
+          data:
+            title: Disinserisci allarme
+            size: normal
+            dismissable: true
+            content:
+              type: vertical-stack
               cards:
-              - type: custom:button-card
-                name: '1'
-                show_icon: false
-                tap_action:
-                  action: perform-action
-                  perform_action: elkron_mp500.keypad_press
-                  target:
-                    entity_id: alarm_control_panel.elkron_mp500_sistema
-                  data:
-                    key: '1'
-                styles:
-                  card:
-                  - background: '#3a4252'
-                  - border-radius: 14px
-                  - height: 56px
-                  name:
-                  - font-size: 22px
-                  - font-weight: bold
-              - type: custom:button-card
-                name: '2'
-                show_icon: false
-                tap_action:
-                  action: perform-action
-                  perform_action: elkron_mp500.keypad_press
-                  target:
-                    entity_id: alarm_control_panel.elkron_mp500_sistema
-                  data:
-                    key: '2'
-                styles:
-                  card:
-                  - background: '#3a4252'
-                  - border-radius: 14px
-                  - height: 56px
-                  name:
-                  - font-size: 22px
-                  - font-weight: bold
-              - type: custom:button-card
-                name: '3'
-                show_icon: false
-                tap_action:
-                  action: perform-action
-                  perform_action: elkron_mp500.keypad_press
-                  target:
-                    entity_id: alarm_control_panel.elkron_mp500_sistema
-                  data:
-                    key: '3'
-                styles:
-                  card:
-                  - background: '#3a4252'
-                  - border-radius: 14px
-                  - height: 56px
-                  name:
-                  - font-size: 22px
-                  - font-weight: bold
-              - type: custom:button-card
-                name: '4'
-                show_icon: false
-                tap_action:
-                  action: perform-action
-                  perform_action: elkron_mp500.keypad_press
-                  target:
-                    entity_id: alarm_control_panel.elkron_mp500_sistema
-                  data:
-                    key: '4'
-                styles:
-                  card:
-                  - background: '#3a4252'
-                  - border-radius: 14px
-                  - height: 56px
-                  name:
-                  - font-size: 22px
-                  - font-weight: bold
-              - type: custom:button-card
-                name: '5'
-                show_icon: false
-                tap_action:
-                  action: perform-action
-                  perform_action: elkron_mp500.keypad_press
-                  target:
-                    entity_id: alarm_control_panel.elkron_mp500_sistema
-                  data:
-                    key: '5'
-                styles:
-                  card:
-                  - background: '#3a4252'
-                  - border-radius: 14px
-                  - height: 56px
-                  name:
-                  - font-size: 22px
-                  - font-weight: bold
-              - type: custom:button-card
-                name: '6'
-                show_icon: false
-                tap_action:
-                  action: perform-action
-                  perform_action: elkron_mp500.keypad_press
-                  target:
-                    entity_id: alarm_control_panel.elkron_mp500_sistema
-                  data:
-                    key: '6'
-                styles:
-                  card:
-                  - background: '#3a4252'
-                  - border-radius: 14px
-                  - height: 56px
-                  name:
-                  - font-size: 22px
-                  - font-weight: bold
-              - type: custom:button-card
-                name: '7'
-                show_icon: false
-                tap_action:
-                  action: perform-action
-                  perform_action: elkron_mp500.keypad_press
-                  target:
-                    entity_id: alarm_control_panel.elkron_mp500_sistema
-                  data:
-                    key: '7'
-                styles:
-                  card:
-                  - background: '#3a4252'
-                  - border-radius: 14px
-                  - height: 56px
-                  name:
-                  - font-size: 22px
-                  - font-weight: bold
-              - type: custom:button-card
-                name: '8'
-                show_icon: false
-                tap_action:
-                  action: perform-action
-                  perform_action: elkron_mp500.keypad_press
-                  target:
-                    entity_id: alarm_control_panel.elkron_mp500_sistema
-                  data:
-                    key: '8'
-                styles:
-                  card:
-                  - background: '#3a4252'
-                  - border-radius: 14px
-                  - height: 56px
-                  name:
-                  - font-size: 22px
-                  - font-weight: bold
-              - type: custom:button-card
-                name: '9'
-                show_icon: false
-                tap_action:
-                  action: perform-action
-                  perform_action: elkron_mp500.keypad_press
-                  target:
-                    entity_id: alarm_control_panel.elkron_mp500_sistema
-                  data:
-                    key: '9'
-                styles:
-                  card:
-                  - background: '#3a4252'
-                  - border-radius: 14px
-                  - height: 56px
-                  name:
-                  - font-size: 22px
-                  - font-weight: bold
-              - type: custom:button-card
-                name: C
-                show_icon: false
-                tap_action:
-                  action: perform-action
-                  perform_action: elkron_mp500.keypad_press
-                  target:
-                    entity_id: alarm_control_panel.elkron_mp500_sistema
-                  data:
-                    key: C
-                styles:
-                  card:
-                  - background: '#8a3b3b'
-                  - border-radius: 14px
-                  - height: 56px
-                  name:
-                  - font-size: 22px
-                  - font-weight: bold
-              - type: custom:button-card
-                name: '0'
-                show_icon: false
-                tap_action:
-                  action: perform-action
-                  perform_action: elkron_mp500.keypad_press
-                  target:
-                    entity_id: alarm_control_panel.elkron_mp500_sistema
-                  data:
-                    key: '0'
-                styles:
-                  card:
-                  - background: '#3a4252'
-                  - border-radius: 14px
-                  - height: 56px
-                  name:
-                  - font-size: 22px
-                  - font-weight: bold
-              - type: custom:button-card
-                name: ✓
-                show_icon: false
-                tap_action:
-                  action: fire-dom-event
-                  browser_mod:
-                    service: browser_mod.sequence
+              - type: markdown
+                content: <center><h1>{% set n = state_attr('alarm_control_panel.elkron_mp500_sistema','cifre_digitate') | int(0) %}{{ '●' * n if n else 'Inserisci il codice' }}</h1></center>
+              - type: grid
+                columns: 3
+                square: false
+                cards:
+                - type: custom:button-card
+                  name: '1'
+                  show_icon: false
+                  tap_action:
+                    action: perform-action
+                    perform_action: elkron_mp500.keypad_press
+                    target:
+                      entity_id: alarm_control_panel.elkron_mp500_sistema
                     data:
-                      sequence:
-                      - service: elkron_mp500.keypad_submit
-                        data:
-                          entity_id: alarm_control_panel.elkron_mp500_sistema
-                      - service: browser_mod.close_popup
-                styles:
-                  card:
-                  - background: '#1fa65f'
-                  - border-radius: 14px
-                  - height: 56px
-                  name:
-                  - font-size: 22px
-                  - font-weight: bold
-    styles:
-      card:
-      - background: linear-gradient(#3fd98a,
-      - border: none
-      - border-radius: 10px
-      - box-shadow: 0 2px 0 rgba(0,0,0,.35)
-      - height: 42px
-      - padding: 0
-      name:
-      - color: white
-      - font-size: 11px
-      - font-weight: bold
-      - letter-spacing: 1px
+                      key: '1'
+                  styles:
+                    card:
+                    - background: '#3a4252'
+                    - border-radius: 14px
+                    - height: 56px
+                    name:
+                    - font-size: 22px
+                    - font-weight: bold
+                - type: custom:button-card
+                  name: '2'
+                  show_icon: false
+                  tap_action:
+                    action: perform-action
+                    perform_action: elkron_mp500.keypad_press
+                    target:
+                      entity_id: alarm_control_panel.elkron_mp500_sistema
+                    data:
+                      key: '2'
+                  styles:
+                    card:
+                    - background: '#3a4252'
+                    - border-radius: 14px
+                    - height: 56px
+                    name:
+                    - font-size: 22px
+                    - font-weight: bold
+                - type: custom:button-card
+                  name: '3'
+                  show_icon: false
+                  tap_action:
+                    action: perform-action
+                    perform_action: elkron_mp500.keypad_press
+                    target:
+                      entity_id: alarm_control_panel.elkron_mp500_sistema
+                    data:
+                      key: '3'
+                  styles:
+                    card:
+                    - background: '#3a4252'
+                    - border-radius: 14px
+                    - height: 56px
+                    name:
+                    - font-size: 22px
+                    - font-weight: bold
+                - type: custom:button-card
+                  name: '4'
+                  show_icon: false
+                  tap_action:
+                    action: perform-action
+                    perform_action: elkron_mp500.keypad_press
+                    target:
+                      entity_id: alarm_control_panel.elkron_mp500_sistema
+                    data:
+                      key: '4'
+                  styles:
+                    card:
+                    - background: '#3a4252'
+                    - border-radius: 14px
+                    - height: 56px
+                    name:
+                    - font-size: 22px
+                    - font-weight: bold
+                - type: custom:button-card
+                  name: '5'
+                  show_icon: false
+                  tap_action:
+                    action: perform-action
+                    perform_action: elkron_mp500.keypad_press
+                    target:
+                      entity_id: alarm_control_panel.elkron_mp500_sistema
+                    data:
+                      key: '5'
+                  styles:
+                    card:
+                    - background: '#3a4252'
+                    - border-radius: 14px
+                    - height: 56px
+                    name:
+                    - font-size: 22px
+                    - font-weight: bold
+                - type: custom:button-card
+                  name: '6'
+                  show_icon: false
+                  tap_action:
+                    action: perform-action
+                    perform_action: elkron_mp500.keypad_press
+                    target:
+                      entity_id: alarm_control_panel.elkron_mp500_sistema
+                    data:
+                      key: '6'
+                  styles:
+                    card:
+                    - background: '#3a4252'
+                    - border-radius: 14px
+                    - height: 56px
+                    name:
+                    - font-size: 22px
+                    - font-weight: bold
+                - type: custom:button-card
+                  name: '7'
+                  show_icon: false
+                  tap_action:
+                    action: perform-action
+                    perform_action: elkron_mp500.keypad_press
+                    target:
+                      entity_id: alarm_control_panel.elkron_mp500_sistema
+                    data:
+                      key: '7'
+                  styles:
+                    card:
+                    - background: '#3a4252'
+                    - border-radius: 14px
+                    - height: 56px
+                    name:
+                    - font-size: 22px
+                    - font-weight: bold
+                - type: custom:button-card
+                  name: '8'
+                  show_icon: false
+                  tap_action:
+                    action: perform-action
+                    perform_action: elkron_mp500.keypad_press
+                    target:
+                      entity_id: alarm_control_panel.elkron_mp500_sistema
+                    data:
+                      key: '8'
+                  styles:
+                    card:
+                    - background: '#3a4252'
+                    - border-radius: 14px
+                    - height: 56px
+                    name:
+                    - font-size: 22px
+                    - font-weight: bold
+                - type: custom:button-card
+                  name: '9'
+                  show_icon: false
+                  tap_action:
+                    action: perform-action
+                    perform_action: elkron_mp500.keypad_press
+                    target:
+                      entity_id: alarm_control_panel.elkron_mp500_sistema
+                    data:
+                      key: '9'
+                  styles:
+                    card:
+                    - background: '#3a4252'
+                    - border-radius: 14px
+                    - height: 56px
+                    name:
+                    - font-size: 22px
+                    - font-weight: bold
+                - type: custom:button-card
+                  name: C
+                  show_icon: false
+                  tap_action:
+                    action: perform-action
+                    perform_action: elkron_mp500.keypad_press
+                    target:
+                      entity_id: alarm_control_panel.elkron_mp500_sistema
+                    data:
+                      key: C
+                  styles:
+                    card:
+                    - background: '#8a3b3b'
+                    - border-radius: 14px
+                    - height: 56px
+                    name:
+                    - font-size: 22px
+                    - font-weight: bold
+                - type: custom:button-card
+                  name: '0'
+                  show_icon: false
+                  tap_action:
+                    action: perform-action
+                    perform_action: elkron_mp500.keypad_press
+                    target:
+                      entity_id: alarm_control_panel.elkron_mp500_sistema
+                    data:
+                      key: '0'
+                  styles:
+                    card:
+                    - background: '#3a4252'
+                    - border-radius: 14px
+                    - height: 56px
+                    name:
+                    - font-size: 22px
+                    - font-weight: bold
+                - type: custom:button-card
+                  name: ✓
+                  show_icon: false
+                  tap_action:
+                    action: fire-dom-event
+                    browser_mod:
+                      service: browser_mod.sequence
+                      data:
+                        sequence:
+                        - service: elkron_mp500.keypad_submit
+                          data:
+                            entity_id: alarm_control_panel.elkron_mp500_sistema
+                        - service: browser_mod.close_popup
+                  styles:
+                    card:
+                    - background: '#1fa65f'
+                    - border-radius: 14px
+                    - height: 56px
+                    name:
+                    - font-size: 22px
+                    - font-weight: bold
+      styles:
+        card:
+        - background: linear-gradient(#3fd98a,
+        - border: none
+        - border-radius: 10px
+        - box-shadow: 0 2px 0 rgba(0,0,0,.35)
+        - height: 42px
+        - padding: 0
+        name:
+        - color: white
+        - font-size: 11px
+        - font-weight: bold
+        - letter-spacing: 1px
+  - type: conditional
+    conditions:
+    - condition: state
+      entity: alarm_control_panel.elkron_mp500_sistema
+      attribute: code_format
+      state_not: number
+    card:
+      type: custom:button-card
+      name: DISINSERISCI
+      show_icon: false
+      tap_action:
+        action: perform-action
+        perform_action: alarm_control_panel.alarm_disarm
+        target:
+          entity_id: alarm_control_panel.elkron_mp500_sistema
+        confirmation:
+          text: Disinserire l'allarme?
+      styles:
+        card:
+        - background: linear-gradient(#3fd98a,
+        - border: none
+        - border-radius: 10px
+        - box-shadow: 0 2px 0 rgba(0,0,0,.35)
+        - height: 42px
+        - padding: 0
+        name:
+        - color: white
+        - font-size: 11px
+        - font-weight: bold
+        - letter-spacing: 1px
 - type: grid
   columns: 3
   square: false
