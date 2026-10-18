@@ -118,19 +118,24 @@ class ElkronAlarmPanel(CoordinatorEntity, AlarmControlPanelEntity):
         options = getattr(self._entry, "options", {}) or {}
         return bool(options.get(CONF_DISARM_HASH) and options.get(CONF_DISARM_SALT))
 
+    def _check_disarm_code(self, code) -> None:
+        """Raise ServiceValidationError unless the disarm code is right (if one is set)."""
+        if not self._code_configured:
+            return
+        locked = self._limiter.seconds_locked()
+        if locked:
+            raise ServiceValidationError(
+                f"Troppi codici errati: disinserimento bloccato per altri {locked} secondi."
+            )
+        options = self._entry.options
+        if not verify_code(code, options[CONF_DISARM_SALT], options[CONF_DISARM_HASH]):
+            self._limiter.failed()
+            _LOGGER.warning("Disinserimento rifiutato: codice mancante o errato")
+            raise ServiceValidationError("Codice non valido: disinserimento non eseguito.")
+        self._limiter.succeeded()
+
     async def async_alarm_disarm(self, code=None) -> None:
-        if self._code_configured:
-            locked = self._limiter.seconds_locked()
-            if locked:
-                raise ServiceValidationError(
-                    f"Troppi codici errati: disinserimento bloccato per altri {locked} secondi."
-                )
-            options = self._entry.options
-            if not verify_code(code, options[CONF_DISARM_SALT], options[CONF_DISARM_HASH]):
-                self._limiter.failed()
-                _LOGGER.warning("Disinserimento rifiutato: codice mancante o errato")
-                raise ServiceValidationError("Codice non valido: disinserimento non eseguito.")
-            self._limiter.succeeded()
+        self._check_disarm_code(code)
         await self._async_command("Disinserimento", self._client.disarm)
 
     # ---- on-screen keypad -------------------------------------------------
@@ -146,7 +151,28 @@ class ElkronAlarmPanel(CoordinatorEntity, AlarmControlPanelEntity):
         self.async_write_ha_state()
 
     async def async_keypad_submit(self) -> None:
+        """Check the code now, then send the command in the background.
+
+        The panel needs several seconds to execute the command; the dashboard
+        keypad should not stay open for that long. A wrong code is still
+        reported at once; a later failure of the command is shown as a
+        persistent notification.
+        """
         code = self._fresh_digits()
         self._digits = ""
         self.async_write_ha_state()
-        await self.async_alarm_disarm(code)
+        self._check_disarm_code(code)
+        self.hass.async_create_task(self._async_background_disarm())
+
+    async def _async_background_disarm(self) -> None:
+        try:
+            await self._async_command("Disinserimento", self._client.disarm)
+        except HomeAssistantError as err:
+            from homeassistant.components import persistent_notification
+
+            persistent_notification.async_create(
+                self.hass,
+                str(err),
+                title="Elkron MP500",
+                notification_id=f"{DOMAIN}_disarm_failed",
+            )

@@ -328,7 +328,10 @@ async def _keypad():
     assert ent.extra_state_attributes["cifre_digitate"] == 6   # capped at 6
     await ent.async_keypad_press("C"); assert ent.extra_state_attributes["cifre_digitate"] == 0
     for k in "123456": await ent.async_keypad_press(k)
+    ent.hass = MagicMock(); tasks = []
+    ent.hass.async_create_task = lambda c: tasks.append(c)
     await ent.async_keypad_submit()
+    for c in tasks: await c
     client.disarm.assert_awaited_once(); assert ent._digits == ""
     for k in "111111": await ent.async_keypad_press(k)
     try:

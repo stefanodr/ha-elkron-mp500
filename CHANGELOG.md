@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.5.2
+- Tastierino: il codice è controllato subito e il popup si chiude senza aspettare i secondi che la centrale impiega a eseguire il comando. Un codice errato è segnalato subito; se il comando poi fallisce compare una notifica persistente.
+
 ## 1.5.1
 - Tastierino a schermo per la card: servizi `elkron_mp500.keypad_press` e `elkron_mp500.keypad_submit`. Le cifre restano solo in memoria (mai nello stato o nello storico), si azzerano dopo 30 secondi e il contatore è nell'attributo `cifre_digitate`. Non serve nessun helper.
 - Card di esempio pronta in `examples/dashboard_card.yaml`.
