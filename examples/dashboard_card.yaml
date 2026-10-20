@@ -12,12 +12,11 @@ keep:
   margin: true
   box_shadow: false
 card_mod:
-  style: "ha-card {\n  background: #171c27 !important;\n  border: 1px solid #343d50 !important;\n  border-radius: 16px !important;\n  padding: 12px !important;\n  box-shadow: none !important;\n  overflow:\
-    \ hidden;\n}\n"
+  style: "ha-card {\n  background: #171c27 !important;\n  border: 1px solid #343d50 !important;\n  border-radius: 16px !important;\n  padding: 12px !important;\n  box-shadow: none !important;\n  overflow: hidden;\n}\n"
 cards:
 - type: custom:button-card
   entity: alarm_control_panel.elkron_mp500_sistema
-  name: DISINSERITO
+  name: ALLARME DISINSERITO
   label: ELKRON MP500
   show_icon: false
   show_state: false
@@ -26,49 +25,66 @@ cards:
     action: more-info
   styles:
     card:
-    - background: linear-gradient(#0f2a3f,
-    - border: 2px solid
-    - border-radius: 10px
-    - box-shadow: inset 0 0 18px rgba(79,195,247,.2)
-    - padding: 12px 14px
+    - background: 'linear-gradient(180deg, #0c2538 0%, #08141f 100%)'
+    - border: '3px solid #1b2a3a'
+    - border-radius: 12px
+    - overflow: hidden
+    - padding: 10px 0 8px 0
+    - box-shadow: inset 0 0 22px rgba(79,195,247,.28), inset 0 3px 8px rgba(0,0,0,.7), 0 1px 0 rgba(255,255,255,.08)
     grid:
-    - grid-template-areas: '"l" "n"'
+    - grid-template-areas: l" "n
+    - grid-template-columns: 1fr
     - text-align: left
     label:
     - justify-self: start
-    - color: '#8fe3ff'
-    - font-size: 11px
-    - letter-spacing: 2px
-    - opacity: 0.8
-    - font-family: monospace
+    - padding-left: 14px
+    - color: '#5fb8d6'
+    - font-size: 14px
+    - letter-spacing: 3px
+    - opacity: '0.75'
+    - font-family: VT323", "Share Tech Mono", "Lucida Console", monospace
     name:
-    - justify-self: start
+    - display: block
+    - width: max-content
+    - padding-left: 100%
+    - white-space: nowrap
     - color: '#8fe3ff'
-    - font-size: 22px
-    - letter-spacing: 1px
-    - padding-top: 6px
-    - font-family: monospace
+    - font-size: 34px
+    - line-height: '1.05'
+    - letter-spacing: 3px
+    - font-family: VT323", "Share Tech Mono", "Lucida Console", monospace
+    - text-shadow: 0 0 6px rgba(143,227,255,.85), 0 0 14px rgba(79,195,247,.45)
+    - animation: elk-scroll 9s linear infinite
   state:
   - value: armed_away
-    name: INSERITO
+    name: ALLARME INSERITO
     styles:
       name:
       - color: '#ff8a80'
+      - text-shadow: 0 0 6px rgba(255,138,128,.85), 0 0 14px rgba(255,82,82,.45)
   - value: armed_custom_bypass
-    name: INSERITO PARZIALE
+    name: ALLARME INSERITO PARZIALE
     styles:
       name:
       - color: '#ffe082'
+      - text-shadow: 0 0 6px rgba(255,224,130,.85), 0 0 14px rgba(255,202,40,.45)
   - value: triggered
-    name: ALLARME
+    name: '!!! ALLARME IN CORSO !!!'
     styles:
       name:
       - color: '#ff5252'
+      - text-shadow: 0 0 8px rgba(255,82,82,.95), 0 0 18px rgba(255,23,68,.6)
   - value: unavailable
-    name: NON DISPONIBILE
+    name: CENTRALE NON DISPONIBILE
     styles:
       name:
-      - color: '#ff8a80'
+      - color: '#9ba8bd'
+      - text-shadow: none
+  extra_styles: '@import url(''https://fonts.googleapis.com/css2?family=VT323&display=swap'');
+
+    @keyframes elk-scroll { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+
+    '
 - type: grid
   columns: 2
   square: false
@@ -149,11 +165,10 @@ cards:
   columns: 2
   square: false
   card_mod:
-    style: "ha-card {\n  background: transparent !important;\n  border: none !important;\n  box-shadow: none !important;\n  padding: 0 !important;\n}\n#root {\n  gap: 6px !important;\n}\n"
+    style: "ha-card {\n  background: transparent !important;\n  border: none !important;\n  box-shadow: none !important;\n  padding: 0 !important;\n}\n#root {\n  gap: 10px !important;\n}\n"
   cards:
   - type: custom:button-card
     name: INSERISCI
-    show_icon: false
     tap_action:
       action: perform-action
       perform_action: alarm_control_panel.alarm_arm_away
@@ -163,17 +178,24 @@ cards:
         text: Inserire l'allarme (tutto l'impianto)?
     styles:
       card:
-      - background: linear-gradient(#ff6a55,
-      - border: none
-      - border-radius: 10px
-      - box-shadow: 0 2px 0 rgba(0,0,0,.35)
-      - height: 42px
-      - padding: 0
+      - background: 'linear-gradient(180deg, #ff8a76 0%, #e0402b 55%, #b92f1d 100%)'
+      - border: '2px solid #7a1d10'
+      - border-radius: 16px
+      - height: 68px
+      - padding: '0'
+      - margin-bottom: 6px
+      - box-shadow: 'inset 0 2px 0 rgba(255,255,255,.45), inset 0 -5px 8px rgba(0,0,0,.30), 0 5px 0 #7a1d10, 0 9px 14px rgba(0,0,0,.55)'
+      - transition: transform .08s, box-shadow .08s
       name:
       - color: white
-      - font-size: 11px
+      - font-size: 16px
       - font-weight: bold
-      - letter-spacing: 1px
+      - letter-spacing: 2px
+      - text-shadow: 0 -1px 0 rgba(0,0,0,.5), 0 1px 0 rgba(255,255,255,.25)
+    extra_styles: 'ha-card:active { transform: translateY(4px); box-shadow: inset 0 2px 0 rgba(255,255,255,.3), inset 0 -2px 4px rgba(0,0,0,.3), 0 1px 0 #7a1d10, 0 3px 6px rgba(0,0,0,.5) !important; }
+
+      '
+    show_icon: false
   - type: conditional
     conditions:
     - condition: state
@@ -183,7 +205,6 @@ cards:
     card:
       type: custom:button-card
       name: DISINSERISCI
-      show_icon: false
       tap_action:
         action: fire-dom-event
         browser_mod:
@@ -422,17 +443,24 @@ cards:
                     - font-weight: bold
       styles:
         card:
-        - background: linear-gradient(#3fd98a,
-        - border: none
-        - border-radius: 10px
-        - box-shadow: 0 2px 0 rgba(0,0,0,.35)
-        - height: 42px
-        - padding: 0
+        - background: 'linear-gradient(180deg, #5be79b 0%, #25b26a 55%, #17874c 100%)'
+        - border: '2px solid #0c5a32'
+        - border-radius: 16px
+        - height: 68px
+        - padding: '0'
+        - margin-bottom: 6px
+        - box-shadow: 'inset 0 2px 0 rgba(255,255,255,.45), inset 0 -5px 8px rgba(0,0,0,.30), 0 5px 0 #0c5a32, 0 9px 14px rgba(0,0,0,.55)'
+        - transition: transform .08s, box-shadow .08s
         name:
         - color: white
-        - font-size: 11px
+        - font-size: 16px
         - font-weight: bold
-        - letter-spacing: 1px
+        - letter-spacing: 2px
+        - text-shadow: 0 -1px 0 rgba(0,0,0,.5), 0 1px 0 rgba(255,255,255,.25)
+      extra_styles: 'ha-card:active { transform: translateY(4px); box-shadow: inset 0 2px 0 rgba(255,255,255,.3), inset 0 -2px 4px rgba(0,0,0,.3), 0 1px 0 #0c5a32, 0 3px 6px rgba(0,0,0,.5) !important; }
+
+        '
+      show_icon: false
   - type: conditional
     conditions:
     - condition: state
@@ -442,7 +470,6 @@ cards:
     card:
       type: custom:button-card
       name: DISINSERISCI
-      show_icon: false
       tap_action:
         action: perform-action
         perform_action: alarm_control_panel.alarm_disarm
@@ -452,17 +479,24 @@ cards:
           text: Disinserire l'allarme?
       styles:
         card:
-        - background: linear-gradient(#3fd98a,
-        - border: none
-        - border-radius: 10px
-        - box-shadow: 0 2px 0 rgba(0,0,0,.35)
-        - height: 42px
-        - padding: 0
+        - background: 'linear-gradient(180deg, #5be79b 0%, #25b26a 55%, #17874c 100%)'
+        - border: '2px solid #0c5a32'
+        - border-radius: 16px
+        - height: 68px
+        - padding: '0'
+        - margin-bottom: 6px
+        - box-shadow: 'inset 0 2px 0 rgba(255,255,255,.45), inset 0 -5px 8px rgba(0,0,0,.30), 0 5px 0 #0c5a32, 0 9px 14px rgba(0,0,0,.55)'
+        - transition: transform .08s, box-shadow .08s
         name:
         - color: white
-        - font-size: 11px
+        - font-size: 16px
         - font-weight: bold
-        - letter-spacing: 1px
+        - letter-spacing: 2px
+        - text-shadow: 0 -1px 0 rgba(0,0,0,.5), 0 1px 0 rgba(255,255,255,.25)
+      extra_styles: 'ha-card:active { transform: translateY(4px); box-shadow: inset 0 2px 0 rgba(255,255,255,.3), inset 0 -2px 4px rgba(0,0,0,.3), 0 1px 0 #0c5a32, 0 3px 6px rgba(0,0,0,.5) !important; }
+
+        '
+      show_icon: false
 - type: grid
   columns: 3
   square: false
@@ -498,7 +532,7 @@ cards:
     styles:
       card:
       - background: transparent
-      - border: 1px solid
+      - border: '1px solid #525b6b'
       - border-radius: 8px
       - box-shadow: none
       - padding: 4px 2px
@@ -531,7 +565,7 @@ cards:
       styles:
         card:
         - background: '#39321d'
-        - border: 1px solid
+        - border: '1px solid #d6a928'
         icon:
         - color: '#ffca28'
         state:
@@ -542,7 +576,7 @@ cards:
       styles:
         card:
         - background: '#351f25'
-        - border: 1px solid
+        - border: '1px solid #ef5350'
         icon:
         - color: '#ff5252'
         state:
@@ -553,7 +587,7 @@ cards:
       styles:
         card:
         - background: '#351f25'
-        - border: 1px solid
+        - border: '1px solid #ef5350'
         icon:
         - color: '#ff5252'
         state:
@@ -587,7 +621,7 @@ cards:
     styles:
       card:
       - background: transparent
-      - border: 1px solid
+      - border: '1px solid #525b6b'
       - border-radius: 8px
       - box-shadow: none
       - padding: 4px 2px
@@ -620,7 +654,7 @@ cards:
       styles:
         card:
         - background: '#39321d'
-        - border: 1px solid
+        - border: '1px solid #d6a928'
         icon:
         - color: '#ffca28'
         state:
@@ -631,7 +665,7 @@ cards:
       styles:
         card:
         - background: '#351f25'
-        - border: 1px solid
+        - border: '1px solid #ef5350'
         icon:
         - color: '#ff5252'
         state:
@@ -642,7 +676,7 @@ cards:
       styles:
         card:
         - background: '#351f25'
-        - border: 1px solid
+        - border: '1px solid #ef5350'
         icon:
         - color: '#ff5252'
         state:
@@ -676,7 +710,7 @@ cards:
     styles:
       card:
       - background: transparent
-      - border: 1px solid
+      - border: '1px solid #525b6b'
       - border-radius: 8px
       - box-shadow: none
       - padding: 4px 2px
@@ -709,7 +743,7 @@ cards:
       styles:
         card:
         - background: '#39321d'
-        - border: 1px solid
+        - border: '1px solid #d6a928'
         icon:
         - color: '#ffca28'
         state:
@@ -720,7 +754,7 @@ cards:
       styles:
         card:
         - background: '#351f25'
-        - border: 1px solid
+        - border: '1px solid #ef5350'
         icon:
         - color: '#ff5252'
         state:
@@ -731,7 +765,7 @@ cards:
       styles:
         card:
         - background: '#351f25'
-        - border: 1px solid
+        - border: '1px solid #ef5350'
         icon:
         - color: '#ff5252'
         state:
@@ -765,7 +799,7 @@ cards:
     styles:
       card:
       - background: transparent
-      - border: 1px solid
+      - border: '1px solid #525b6b'
       - border-radius: 8px
       - box-shadow: none
       - padding: 4px 2px
@@ -798,7 +832,7 @@ cards:
       styles:
         card:
         - background: '#39321d'
-        - border: 1px solid
+        - border: '1px solid #d6a928'
         icon:
         - color: '#ffca28'
         state:
@@ -809,7 +843,7 @@ cards:
       styles:
         card:
         - background: '#351f25'
-        - border: 1px solid
+        - border: '1px solid #ef5350'
         icon:
         - color: '#ff5252'
         state:
@@ -820,7 +854,7 @@ cards:
       styles:
         card:
         - background: '#351f25'
-        - border: 1px solid
+        - border: '1px solid #ef5350'
         icon:
         - color: '#ff5252'
         state:
@@ -854,7 +888,7 @@ cards:
     styles:
       card:
       - background: transparent
-      - border: 1px solid
+      - border: '1px solid #525b6b'
       - border-radius: 8px
       - box-shadow: none
       - padding: 4px 2px
@@ -887,7 +921,7 @@ cards:
       styles:
         card:
         - background: '#39321d'
-        - border: 1px solid
+        - border: '1px solid #d6a928'
         icon:
         - color: '#ffca28'
         state:
@@ -898,7 +932,7 @@ cards:
       styles:
         card:
         - background: '#351f25'
-        - border: 1px solid
+        - border: '1px solid #ef5350'
         icon:
         - color: '#ff5252'
         state:
@@ -909,7 +943,7 @@ cards:
       styles:
         card:
         - background: '#351f25'
-        - border: 1px solid
+        - border: '1px solid #ef5350'
         icon:
         - color: '#ff5252'
         state:
@@ -943,7 +977,7 @@ cards:
     styles:
       card:
       - background: transparent
-      - border: 1px solid
+      - border: '1px solid #525b6b'
       - border-radius: 8px
       - box-shadow: none
       - padding: 4px 2px
@@ -976,7 +1010,7 @@ cards:
       styles:
         card:
         - background: '#39321d'
-        - border: 1px solid
+        - border: '1px solid #d6a928'
         icon:
         - color: '#ffca28'
         state:
@@ -987,7 +1021,7 @@ cards:
       styles:
         card:
         - background: '#351f25'
-        - border: 1px solid
+        - border: '1px solid #ef5350'
         icon:
         - color: '#ff5252'
         state:
@@ -998,7 +1032,7 @@ cards:
       styles:
         card:
         - background: '#351f25'
-        - border: 1px solid
+        - border: '1px solid #ef5350'
         icon:
         - color: '#ff5252'
         state:
@@ -1032,7 +1066,7 @@ cards:
     styles:
       card:
       - background: transparent
-      - border: 1px solid
+      - border: '1px solid #525b6b'
       - border-radius: 8px
       - box-shadow: none
       - padding: 4px 2px
@@ -1065,7 +1099,7 @@ cards:
       styles:
         card:
         - background: '#39321d'
-        - border: 1px solid
+        - border: '1px solid #d6a928'
         icon:
         - color: '#ffca28'
         state:
@@ -1076,7 +1110,7 @@ cards:
       styles:
         card:
         - background: '#351f25'
-        - border: 1px solid
+        - border: '1px solid #ef5350'
         icon:
         - color: '#ff5252'
         state:
@@ -1087,7 +1121,7 @@ cards:
       styles:
         card:
         - background: '#351f25'
-        - border: 1px solid
+        - border: '1px solid #ef5350'
         icon:
         - color: '#ff5252'
         state:
@@ -1121,7 +1155,7 @@ cards:
     styles:
       card:
       - background: transparent
-      - border: 1px solid
+      - border: '1px solid #525b6b'
       - border-radius: 8px
       - box-shadow: none
       - padding: 4px 2px
@@ -1154,7 +1188,7 @@ cards:
       styles:
         card:
         - background: '#39321d'
-        - border: 1px solid
+        - border: '1px solid #d6a928'
         icon:
         - color: '#ffca28'
         state:
@@ -1165,7 +1199,7 @@ cards:
       styles:
         card:
         - background: '#351f25'
-        - border: 1px solid
+        - border: '1px solid #ef5350'
         icon:
         - color: '#ff5252'
         state:
@@ -1176,7 +1210,7 @@ cards:
       styles:
         card:
         - background: '#351f25'
-        - border: 1px solid
+        - border: '1px solid #ef5350'
         icon:
         - color: '#ff5252'
         state:
@@ -1210,7 +1244,7 @@ cards:
     styles:
       card:
       - background: transparent
-      - border: 1px solid
+      - border: '1px solid #525b6b'
       - border-radius: 8px
       - box-shadow: none
       - padding: 4px 2px
@@ -1243,7 +1277,7 @@ cards:
       styles:
         card:
         - background: '#39321d'
-        - border: 1px solid
+        - border: '1px solid #d6a928'
         icon:
         - color: '#ffca28'
         state:
@@ -1254,7 +1288,7 @@ cards:
       styles:
         card:
         - background: '#351f25'
-        - border: 1px solid
+        - border: '1px solid #ef5350'
         icon:
         - color: '#ff5252'
         state:
@@ -1265,7 +1299,7 @@ cards:
       styles:
         card:
         - background: '#351f25'
-        - border: 1px solid
+        - border: '1px solid #ef5350'
         icon:
         - color: '#ff5252'
         state:
