@@ -36,25 +36,24 @@ cards:
     - grid-template-columns: 1fr
     - text-align: left
     label:
-    - justify-self: start
-    - padding-left: 14px
     - color: '#5fb8d6'
     - font-size: 14px
     - letter-spacing: 3px
     - opacity: '0.75'
-    - font-family: VT323", "Share Tech Mono", "Lucida Console", monospace
+    - font-family: '"VT323", "Share Tech Mono", "Lucida Console", monospace'
+    - text-align: center
+    - justify-self: center
     name:
-    - display: block
-    - width: max-content
-    - padding-left: 100%
-    - white-space: nowrap
     - color: '#8fe3ff'
-    - font-size: 34px
     - line-height: '1.05'
-    - letter-spacing: 3px
-    - font-family: VT323", "Share Tech Mono", "Lucida Console", monospace
+    - font-family: '"VT323", "Share Tech Mono", "Lucida Console", monospace'
     - text-shadow: 0 0 6px rgba(143,227,255,.85), 0 0 14px rgba(79,195,247,.45)
-    - animation: elk-scroll 9s linear infinite
+    - display: block
+    - text-align: center
+    - white-space: nowrap
+    - letter-spacing: 2px
+    - justify-self: center
+    - font-size: 26px
   state:
   - value: armed_away
     name: ALLARME INSERITO
@@ -68,21 +67,22 @@ cards:
       name:
       - color: '#ffe082'
       - text-shadow: 0 0 6px rgba(255,224,130,.85), 0 0 14px rgba(255,202,40,.45)
+      - font-size: 20px
   - value: triggered
     name: '!!! ALLARME IN CORSO !!!'
     styles:
       name:
       - color: '#ff5252'
       - text-shadow: 0 0 8px rgba(255,82,82,.95), 0 0 18px rgba(255,23,68,.6)
+      - font-size: 20px
   - value: unavailable
     name: CENTRALE NON DISPONIBILE
     styles:
       name:
       - color: '#9ba8bd'
       - text-shadow: none
+      - font-size: 20px
   extra_styles: '@import url(''https://fonts.googleapis.com/css2?family=VT323&display=swap'');
-
-    @keyframes elk-scroll { from { transform: translateX(0); } to { transform: translateX(-100%); } }
 
     '
 - type: grid
