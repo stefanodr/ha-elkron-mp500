@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.5.5 (esperimento)
+- Il login HTTP resta aperto (con refresh ogni 10 secondi) finché la connessione TCP è in uso, come fa Hi-Connect. Con il login rilasciato la centrale chiudeva la connessione TCP circa una volta al minuto. Svantaggio da verificare: la centrale accetta un solo accesso web alla volta, quindi pagina web e app potrebbero non entrare finché l'integrazione è collegata.
+
 ## 1.5.4 (prova)
 - Dopo un accesso fallito a IT500WEB (per esempio errore 404) l'integrazione aspetta 1 minuto, poi 2, 4... fino a 15 minuti prima di riprovare, invece di ripetere il login a ogni lettura.
 - Keepalive TCP lasciato come nella cattura di Hi-Connect (circa 8 al secondo): ogni 3 secondi la centrale chiudeva la connessione circa una volta al minuto.
