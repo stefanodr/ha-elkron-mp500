@@ -25,7 +25,7 @@ from .const import (
     DOMAIN,
     input_entity_id,
 )
-from .protocol import ElkronTcpClient
+from .protocol import ElkronBackoffError, ElkronTcpClient
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,6 +55,9 @@ class ElkronCoordinator(DataUpdateCoordinator[dict]):
             # communication errors. Log a warning so stale data is visible
             # to the administrator; the next scheduled poll tries again.
             if self._last_valid_data is not None:
+                if isinstance(err, ElkronBackoffError):
+                    _LOGGER.debug("Lettura rimandata: %s", err)
+                    return self._last_valid_data
                 _LOGGER.warning(
                     "Lettura TCP IT500WEB non riuscita; mantengo temporaneamente "
                     "l'ultimo stato valido. Errore: %s",

@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.8 (prova)
+- **Corretto un login lasciato aperto.** Se l'accesso riusciva ma un passo successivo veniva rifiutato (per esempio il cambio di modalità), l'integrazione chiudeva la connessione senza uscire dal login. La centrale lo teneva per circa due minuti e rifiutava gli accessi successivi, anche quelli dell'integrazione stessa, con attese sempre più lunghe. Ora esce sempre dal login.
+- Le letture rimandate per l'attesa dopo un errore sono scritte nel registro di debug e non più tra gli avvisi.
+
 ## 1.5.7 (prova)
 - Inserimento e disinserimento ignorano l'attesa dopo un errore e, se un altro accesso (pagina web, app, Hi-Connect) occupa la centrale, riprovano una volta dopo 5 secondi.
 - Messaggio più chiaro quando la centrale rifiuta l'accesso: indica che può essere aperto un altro accesso.

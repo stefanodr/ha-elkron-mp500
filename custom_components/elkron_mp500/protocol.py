@@ -80,6 +80,10 @@ class ElkronBusyError(ElkronProtocolError):
     """The web server answered 503: someone else is using it. Retry later."""
 
 
+class ElkronBackoffError(ElkronBusyError):
+    """A new login is postponed after a recent failure (not an error by itself)."""
+
+
 class ElkronRejectedError(ElkronProtocolError):
     """The web server answered but refused the command (result != ACK)."""
 
@@ -235,7 +239,7 @@ class ElkronTcpClient:
                 return
             wait = self._retry_at - time.monotonic()
             if wait > 0:
-                raise ElkronBusyError(
+                raise ElkronBackoffError(
                     f"Nuovo accesso alla centrale rimandato di {int(wait) + 1} s "
                     "dopo un errore (per non sovraccaricare il modulo)"
                 )
@@ -245,6 +249,7 @@ class ElkronTcpClient:
                 cookie_jar=aiohttp.CookieJar(unsafe=True),
                 headers={"User-Agent": "Home Assistant Elkron MP500"},
             )
+            logged_in = False
             try:
                 # This sequence is directly visible in the Hi-Connect capture: the TCP
                 # listener is opened only after CLOGIN and the two mode calls.
@@ -259,13 +264,19 @@ class ElkronTcpClient:
                     ) from err
                 if login.get("data", {}).get("authlevel", 0) <= 0:
                     raise ElkronAuthError(f"Accesso locale senza permessi (risposta: {login.get('data')})")
+                logged_in = True
                 await self._http_request("/sys/mode.cgi", CMD_MODE_2)
                 await self._http_request("/sys/info.cgi")
                 await self._http_request("/sys/mode.cgi", CMD_MODE_3)
                 await self._http_request("/sys/info.cgi")
             except Exception as err:
-                await self._http.close()
-                self._http = None
+                if logged_in:
+                    # The panel keeps a web login for about two minutes after the
+                    # last request: leaving it would make every next login fail.
+                    await self._release_http_session(reset_mode=True)
+                else:
+                    await self._http.close()
+                    self._http = None
                 self._failures += 1
                 delay = min(BACKOFF_FIRST * 2 ** (self._failures - 1), BACKOFF_MAX)
                 self._retry_at = time.monotonic() + delay

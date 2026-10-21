@@ -371,3 +371,27 @@ async def _backoff():
     print("backoff OK")
 
 _a.run(_backoff())
+
+
+async def _no_leak():
+    from custom_components.elkron_mp500 import protocol as P
+    c = P.ElkronTcpClient("192.168.1.50", 5555)
+    calls = []
+
+    async def fake(path, payload=None):
+        calls.append(path)
+        if path == "/user/clogin.cgi":
+            return {"result": "ACK", "data": {"authlevel": 5}}
+        if path == "/sys/mode.cgi" and payload == P.CMD_MODE_3:
+            raise P.ElkronRejectedError("mode NAK")
+        return {"result": "ACK", "data": {}}
+    c._http_request = fake
+    try:
+        await c._ensure_http_session(); raise SystemExit("no error")
+    except P.ElkronRejectedError:
+        pass
+    assert calls[-1] == "/user/logout.cgi", calls  # login is not left open
+    assert c._http is None
+    print("no login left open after a failed bootstrap: OK")
+
+_a.run(_no_leak())
