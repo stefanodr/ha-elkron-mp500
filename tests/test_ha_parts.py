@@ -341,3 +341,33 @@ async def _keypad():
     print("keypad OK")
 
 _a.run(_keypad())
+
+
+async def _backoff():
+    from custom_components.elkron_mp500 import protocol as P
+    c = P.ElkronTcpClient("192.168.1.50", 5555)
+    calls = []
+
+    async def boom(path, payload=None):
+        calls.append(path)
+        raise P.ElkronProtocolError(f"HTTP {path}: stato 404")
+    c._http_request = boom
+    try:
+        await c._ensure_http_session(); raise SystemExit("no error")
+    except P.ElkronProtocolError:
+        pass
+    n = len(calls)
+    try:
+        await c._ensure_http_session(); raise SystemExit("no backoff")
+    except P.ElkronBusyError:
+        pass
+    assert len(calls) == n, "panel contacted during backoff"
+    c._retry_at = 0  # delay expired
+    try:
+        await c._ensure_http_session()
+    except P.ElkronProtocolError:
+        pass
+    assert len(calls) == 2 * n and c._failures == 2
+    print("backoff OK")
+
+_a.run(_backoff())

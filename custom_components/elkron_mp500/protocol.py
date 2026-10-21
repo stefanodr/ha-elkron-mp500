@@ -5,6 +5,7 @@ import hashlib
 import json
 import logging
 import re
+import time
 
 import aiohttp
 
@@ -18,6 +19,17 @@ DEFAULT_PLANT_ID = "55555555"
 DEFAULT_TECH_CODE = "000000"
 CMD_MODE_2 = {"cmd": 2}
 CMD_MODE_3 = {"cmd": 3}
+
+# The IT500WEB is a small embedded server: it was seen to stop answering the
+# /user/*.cgi pages (404) after many logins and to need a power cycle. After a
+# failed bootstrap the integration therefore waits, with a growing delay, before
+# trying again instead of repeating the login on every poll.
+BACKOFF_FIRST = 60.0
+BACKOFF_MAX = 900.0
+# Seconds between TCP keepalives while the socket is idle. Hi-Connect sends them
+# several times a second, but only while its window is open; doing that day and
+# night is a lot for this module.
+KEEPALIVE_INTERVAL = 3.0
 
 CMD_START = bytes.fromhex("81 55 55 00 00 00 00 60 fe f6 03")
 
@@ -184,6 +196,8 @@ class ElkronTcpClient:
         self._keepalive_task: asyncio.Task | None = None
         self._started = False
         self.bootstraps = 0  # HTTP+TCP sessions opened since start (diagnostic)
+        self._failures = 0  # consecutive failed bootstraps
+        self._retry_at = 0.0  # time.monotonic() before which no new login is tried
 
     @property
     def _base_url(self) -> str:
@@ -223,6 +237,12 @@ class ElkronTcpClient:
         async with self._bootstrap_lock:
             if self._http is not None and not self._http.closed:
                 return
+            wait = self._retry_at - time.monotonic()
+            if wait > 0:
+                raise ElkronBusyError(
+                    f"Nuovo accesso alla centrale rimandato di {int(wait) + 1} s "
+                    "dopo un errore (per non sovraccaricare il modulo)"
+                )
             timeout = aiohttp.ClientTimeout(total=self.timeout)
             self._http = aiohttp.ClientSession(
                 timeout=timeout,
@@ -244,10 +264,20 @@ class ElkronTcpClient:
                 await self._http_request("/sys/info.cgi")
                 await self._http_request("/sys/mode.cgi", CMD_MODE_3)
                 await self._http_request("/sys/info.cgi")
-            except Exception:
+            except Exception as err:
                 await self._http.close()
                 self._http = None
+                self._failures += 1
+                delay = min(BACKOFF_FIRST * 2 ** (self._failures - 1), BACKOFF_MAX)
+                self._retry_at = time.monotonic() + delay
+                _LOGGER.warning(
+                    "Accesso a IT500WEB non riuscito (%s); nuovo tentativo tra %d s",
+                    err,
+                    delay,
+                )
                 raise
+            self._failures = 0
+            self._retry_at = 0.0
             self.bootstraps += 1
             _LOGGER.info("Sessione IT500WEB aperta (n. %s)", self.bootstraps)
             self._refresh_task = asyncio.create_task(self._refresh_http_session())
@@ -433,7 +463,7 @@ class ElkronTcpClient:
         """Hi-Connect keeps the socket alive with frequent 0x65/0x16 pairs."""
         try:
             while self._writer is not None and not self._writer.is_closing():
-                await asyncio.sleep(0.12)
+                await asyncio.sleep(KEEPALIVE_INTERVAL)
                 async with self._tcp_lock:
                     if self._reader is None or self._writer is None:
                         return
@@ -495,7 +525,13 @@ class ElkronTcpClient:
                     command=CMD_GLOBAL_STATE,
                     expected_command=0x80,
                 )
-        except Exception:
+        except Exception as err:
+            _LOGGER.warning(
+                "Sessione TCP IT500WEB chiusa dopo un errore di lettura (%r); "
+                "sessioni aperte finora: %s",
+                err,
+                self.bootstraps,
+            )
             await self._close_tcp()
             await self._release_http_session()
             raise
