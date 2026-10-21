@@ -253,7 +253,10 @@ class ElkronTcpClient:
                 try:
                     login = await self._http_request("/user/clogin.cgi", self._login)
                 except ElkronRejectedError as err:
-                    raise ElkronAuthError(f"Accesso locale rifiutato dalla centrale: {err}") from err
+                    raise ElkronAuthError(
+                        "Accesso locale rifiutato dalla centrale: codici errati oppure un altro "
+                        f"accesso (pagina web, app o Hi-Connect) è aperto in questo momento ({err})"
+                    ) from err
                 if login.get("data", {}).get("authlevel", 0) <= 0:
                     raise ElkronAuthError(f"Accesso locale senza permessi (risposta: {login.get('data')})")
                 await self._http_request("/sys/mode.cgi", CMD_MODE_2)
@@ -562,7 +565,16 @@ class ElkronTcpClient:
         async with self._op_lock:
             await self._close_tcp()
             await self._release_http_session()
-            reader, writer = await self._ensure_tcp()
+            # A command is an explicit request: do not wait for the back-off of the
+            # periodic readings, and try once more if another web login (app,
+            # Hi-Connect, web page) is busy for a few seconds.
+            self._retry_at = 0.0
+            try:
+                reader, writer = await self._ensure_tcp()
+            except (ElkronAuthError, ElkronBusyError):
+                await asyncio.sleep(5)
+                self._retry_at = 0.0
+                reader, writer = await self._ensure_tcp()
             try:
                 async with self._tcp_lock:
                     # The 0x12 event record is not always sent (or arrives late):

@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.7 (prova)
+- Inserimento e disinserimento ignorano l'attesa dopo un errore e, se un altro accesso (pagina web, app, Hi-Connect) occupa la centrale, riprovano una volta dopo 5 secondi.
+- Messaggio più chiaro quando la centrale rifiuta l'accesso: indica che può essere aperto un altro accesso.
+
 ## 1.5.6
 - **Una sessione completa a ogni lettura.** La centrale accetta un solo accesso web alla volta e chiude la connessione TCP circa un minuto dopo l'uscita dal login, quindi tenerla aperta non funziona (log: chiusura ogni ~60 s). Ora ogni lettura fa login, legge, chiude TCP, torna in modalità normale ed esce come Hi-Connect. Tra una lettura e l'altra pagina web, app e Hi-Connect sono liberi.
 - Intervallo di lettura: predefinito 60 s, minimo 30, massimo 600 (le configurazioni più veloci vengono portate a 30).
