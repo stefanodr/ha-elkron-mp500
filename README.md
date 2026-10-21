@@ -64,7 +64,7 @@ Se hai impostato il codice, DISINSERISCI apre un **tastierino numerico** (serviz
 |---|---|
 | Indirizzo IP IT500WEB | L'IP del modulo (lo stesso che apri nel browser per il Web Server). |
 | Porta TCP | Quella predefinita (lasciala se non l'hai cambiata). |
-| Intervallo di polling | Ogni quanti secondi leggere lo stato. 10 s va bene; per i sensori di movimento 1–2 s. Minimo 1, massimo 300. |
+| Intervallo di polling | Ogni quanti secondi leggere lo stato. Predefinito 60 s, minimo 30, massimo 600 (ogni lettura è una sessione completa sulla centrale). |
 | Utente / Password Web Server | **Facoltativi.** Sono lo stesso utente e la stessa password con cui entri nella pagina web del modulo. Servono **una sola volta** per leggere i nomi e **non vengono salvati**. Lasciali vuoti per avere "Ingresso N". |
 | Codice impianto | **Facoltativo.** 8 cifre. Lascia il valore di fabbrica (precompilato) se non l'hai cambiato. |
 | Codice tecnico | **Facoltativo.** Lascia il valore di fabbrica (precompilato) se non l'hai cambiato. |
@@ -83,11 +83,13 @@ Il *codice impianto* e il *codice tecnico* sono quelli impostati sulla centrale 
 ## Come funziona la convivenza con app, Web Server e Hi-Connect
 
 La centrale accetta **un solo accesso web alla volta**. Per questo l'integrazione:
-- legge lo stato dal canale TCP del modulo e **non tiene aperta una sessione web**: app, pagina web e Hi-Connect restano utilizzabili mentre Home Assistant è attivo;
-- fa un login web solo per leggere i nomi, dura meno di un secondo e viene chiuso subito;
+- a ogni lettura (di default ogni 60 secondi) apre una sessione completa, legge lo stato e la chiude come fa Hi-Connect: dura 2-3 secondi, e tra una lettura e l'altra la **pagina web, l'app e Hi-Connect sono liberi**;
+- se in quel momento stai usando la pagina web, l'app o Hi-Connect, la lettura fallisce e l'integrazione riprova più tardi (1, 2, 4… fino a 15 minuti), senza disturbarti;
+- tenere aperta una sessione in modo continuo non funziona: la centrale la tiene per un solo utente alla volta e chiude comunque la connessione dopo circa un minuto;
+- fa un login web anche per leggere i nomi, dura meno di un secondo e viene chiuso subito;
 - se il Web Server è occupato mentre leggi i nomi, vedrai "Il Web Server è occupato": riprova tra poco.
 
-Ogni apertura di sessione viene scritta nello storico eventi della centrale (utente TECNICO). L'entità `Sistema` ha l'attributo **`sessioni_aperte`**: deve restare vicino a 1. Se cresce di continuo, la connessione cade e viene riaperta: aprire una segnalazione con il log.
+Ogni apertura di sessione viene scritta nello storico eventi della centrale (utente TECNICO). L'entità `Sistema` ha l'attributo **`sessioni_aperte`**: è il numero di sessioni aperte dall'avvio: cresce di una a ogni lettura, è normale. Con un intervallo di 60 secondi sono circa 1440 al giorno nello storico della centrale: se ti serve uno storico più pulito, aumenta l'intervallo.
 
 ## Gli ingressi: cablati, wireless e sensori
 

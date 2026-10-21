@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.6
+- **Una sessione completa a ogni lettura.** La centrale accetta un solo accesso web alla volta e chiude la connessione TCP circa un minuto dopo l'uscita dal login, quindi tenerla aperta non funziona (log: chiusura ogni ~60 s). Ora ogni lettura fa login, legge, chiude TCP, torna in modalità normale ed esce come Hi-Connect. Tra una lettura e l'altra pagina web, app e Hi-Connect sono liberi.
+- Intervallo di lettura: predefinito 60 s, minimo 30, massimo 600 (le configurazioni più veloci vengono portate a 30).
+- Dopo un accesso fallito (per esempio mentre usi Hi-Connect) l'integrazione aspetta 1, 2, 4… fino a 15 minuti prima di riprovare.
+- Registro: ogni lettura fallita è segnalata con il motivo.
+
 ## 1.5.5 (esperimento)
 - Il login HTTP resta aperto (con refresh ogni 10 secondi) finché la connessione TCP è in uso, come fa Hi-Connect. Con il login rilasciato la centrale chiudeva la connessione TCP circa una volta al minuto. Svantaggio da verificare: la centrale accetta un solo accesso web alla volta, quindi pagina web e app potrebbero non entrare finché l'integrazione è collegata.
 

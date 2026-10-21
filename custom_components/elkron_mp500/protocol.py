@@ -26,15 +26,6 @@ CMD_MODE_3 = {"cmd": 3}
 # trying again instead of repeating the login on every poll.
 BACKOFF_FIRST = 60.0
 BACKOFF_MAX = 900.0
-# Seconds between TCP keepalives, as in the Hi-Connect capture. A slower rate
-# (3 s) was tried in 1.5.3 and made the panel reset the TCP connection about
-# once a minute, so the capture's rhythm is kept.
-KEEPALIVE_INTERVAL = 0.12
-# EXPERIMENT (1.5.5): the panel closed the TCP connection about once a minute
-# after the HTTP login was released, while Hi-Connect keeps both the HTTP session
-# (refresh.cgi every 10 s) and the TCP socket for minutes. With True the HTTP
-# session is kept like Hi-Connect does.
-HOLD_HTTP_SESSION = True
 
 CMD_START = bytes.fromhex("81 55 55 00 00 00 00 60 fe f6 03")
 
@@ -296,10 +287,16 @@ class ElkronTcpClient:
             except asyncio.CancelledError:
                 pass
 
-    async def _release_http_session(self) -> None:
-        """Log out after a successful TCP state exchange, leaving TCP open."""
+    async def _release_http_session(self, reset_mode: bool = False) -> None:
+        """Log out. With reset_mode, first leave the TCP service mode like Hi-Connect."""
         await self._stop_http_refresh()
         if self._http is not None and not self._http.closed:
+            if reset_mode:
+                try:
+                    await self._http_request("/sys/mode.cgi", CMD_MODE_2)
+                    await self._http_request("/sys/info.cgi")
+                except Exception as err:  # noqa: BLE001 - best effort
+                    _LOGGER.debug("Ritorno a modalità normale IT500WEB: %s", err)
             try:
                 await self._http_request("/user/logout.cgi", {})
             except Exception as err:
@@ -467,28 +464,7 @@ class ElkronTcpClient:
                 await self._release_http_session()
                 raise
             self._started = True
-            self._keepalive_task = asyncio.create_task(self._tcp_keepalive())
             return self._reader, self._writer
-
-    async def _tcp_keepalive(self) -> None:
-        """Hi-Connect keeps the socket alive with frequent 0x65/0x16 pairs."""
-        try:
-            while self._writer is not None and not self._writer.is_closing():
-                await asyncio.sleep(KEEPALIVE_INTERVAL)
-                async with self._tcp_lock:
-                    if self._reader is None or self._writer is None:
-                        return
-                    await self._exchange(
-                        self._reader,
-                        self._writer,
-                        CMD_KEEPALIVE,
-                        None,
-                        allow_ack_only=True,
-                    )
-        except asyncio.CancelledError:
-            raise
-        except Exception as err:
-            _LOGGER.debug("Keepalive TCP IT500WEB non riuscito: %s", err)
 
     async def _close_tcp(self) -> None:
         task, self._keepalive_task = getattr(self, "_keepalive_task", None), None
@@ -508,9 +484,24 @@ class ElkronTcpClient:
             except Exception:
                 pass
 
+    async def _end_session(self) -> None:
+        """Close TCP and leave the web session like Hi-Connect, freeing the panel."""
+        await self._close_tcp()
+        await self._release_http_session(reset_mode=True)
+
     async def read_state(self) -> dict:
+        """One complete session per reading (login, TCP read, exit).
+
+        The panel accepts a single web login at a time and drops the TCP service
+        about a minute after the login is released, so keeping a connection open
+        does not work. Each reading opens a session and closes it, which leaves
+        the web page, the app and Hi-Connect free between two readings.
+        """
         async with self._op_lock:
-            return await self._read_state_locked()
+            try:
+                return await self._read_state_locked()
+            finally:
+                await self._end_session()
 
     async def _read_global_state(
         self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter
@@ -538,34 +529,25 @@ class ElkronTcpClient:
                 )
         except Exception as err:
             _LOGGER.warning(
-                "Sessione TCP IT500WEB chiusa dopo un errore di lettura (%r); "
-                "sessioni aperte finora: %s",
+                "Lettura IT500WEB non riuscita (%r); sessioni aperte finora: %s",
                 err,
                 self.bootstraps,
             )
-            await self._close_tcp()
-            await self._release_http_session()
             raise
-        try:
-            # 0x84 reply: 16 81 55 55 00 00 <n> 00 84 <n input bytes> <2 checksum> 03
-            input_count = input_frame[6]
-            if (
-                input_frame[0] != 0x16
-                or input_count < 1
-                or len(input_frame) != 12 + input_count
-            ):
-                raise ElkronProtocolError("Risposta ingressi non valida")
-            if global_frame[0] != 0x16 or global_frame[6] != 2 or len(global_frame) != 14:
-                raise ElkronProtocolError("Risposta stato generale non valida")
-            return {
-                "inputs": list(input_frame[9 : 9 + input_count]),
-                "global_state": bytes(global_frame[9:11]),
-            }
-        finally:
-            # The TCP socket is retained. Releasing the HTTP login here made the
-            # panel close the TCP connection about once a minute.
-            if not HOLD_HTTP_SESSION:
-                await self._release_http_session()
+        # 0x84 reply: 16 81 55 55 00 00 <n> 00 84 <n input bytes> <2 checksum> 03
+        input_count = input_frame[6]
+        if (
+            input_frame[0] != 0x16
+            or input_count < 1
+            or len(input_frame) != 12 + input_count
+        ):
+            raise ElkronProtocolError("Risposta ingressi non valida")
+        if global_frame[0] != 0x16 or global_frame[6] != 2 or len(global_frame) != 14:
+            raise ElkronProtocolError("Risposta stato generale non valida")
+        return {
+            "inputs": list(input_frame[9 : 9 + input_count]),
+            "global_state": bytes(global_frame[9:11]),
+        }
 
     async def _set_armed(self, armed: bool) -> None:
         """Send the TCP arm/disarm command and confirm it via the global state.
@@ -601,13 +583,8 @@ class ElkronTcpClient:
                 raise ElkronProtocolError(
                     f"Stato dopo il comando non confermato: {state.hex(' ')}"
                 )
-            except Exception:
-                await self._close_tcp()
-                await self._release_http_session()
-                raise
             finally:
-                if not HOLD_HTTP_SESSION:
-                    await self._release_http_session()
+                await self._end_session()
 
     async def arm(self) -> None:
         """Arm the system with TCP command 0x11."""

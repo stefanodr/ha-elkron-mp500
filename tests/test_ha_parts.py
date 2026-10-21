@@ -160,9 +160,9 @@ async def main():
     assert keys == expected, keys
 
     # plain save: no web call, names kept, structure untouched
-    validated = form["data_schema"]({"scan_interval": "1", "name_7": "Porta blindata", "type_7": "door"})
+    validated = form["data_schema"]({"scan_interval": "30", "name_7": "Porta blindata", "type_7": "door"})
     result = await flow.async_step_init(validated)
-    assert result["data"] == {"scan_interval": 1, "names": {"7": "Porta blindata"}, "types": {"7": "door"}}, result
+    assert result["data"] == {"scan_interval": 30, "names": {"7": "Porta blindata"}, "types": {"7": "door"}}, result
 
     # refresh: panel names replace the manual ones and the structure is stored
     async def ok_fetch(host, user, pwd, timeout=8.0):
@@ -171,7 +171,7 @@ async def main():
 
     config_flow.fetch_structure = ok_fetch
     validated = form["data_schema"](
-        {"scan_interval": 5, "refresh_structure": True, "name_1": "x", "web_user": "u", "web_password": "p"}
+        {"scan_interval": 45, "refresh_structure": True, "name_1": "x", "web_user": "u", "web_password": "p"}
     )
     result = await new_flow().async_step_init(validated)
     assert entry.data == {"host": "192.168.1.50"}  # login is not stored
@@ -186,13 +186,13 @@ async def main():
     assert result["type"].value == "form" and result["errors"] == {"base": "web_busy"}, result
 
     # refresh without credentials
-    validated = form["data_schema"]({"scan_interval": 5, "refresh_structure": True})
+    validated = form["data_schema"]({"scan_interval": 45, "refresh_structure": True})
     result = await new_flow().async_step_init(validated)
     assert result["errors"] == {"base": "web_credentials_missing"}, result
     print("options flow (save, refresh, busy, no credentials): OK")
 
     try:
-        form["data_schema"]({"scan_interval": 0})
+        form["data_schema"]({"scan_interval": 29})
     except Exception:
         print("interval 0 rejected: OK")
     else:

@@ -20,6 +20,7 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_TECH_CODE,
+    MIN_SCAN_INTERVAL,
     ALARM_ENTITY_ID,
     DOMAIN,
     input_entity_id,
@@ -112,9 +113,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         plant_id=entry.data.get(CONF_PLANT_ID, DEFAULT_PLANT_ID),
         tech_code=entry.data.get(CONF_TECH_CODE, DEFAULT_TECH_CODE),
     )
-    coordinator = ElkronCoordinator(
-        hass,
-        client,
+    # Each reading is a complete session on the panel: never poll faster than
+    # the minimum, whatever an older configuration says.
+    interval = max(
+        MIN_SCAN_INTERVAL,
         int(
             entry.options.get(
                 CONF_SCAN_INTERVAL,
@@ -122,6 +124,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
         ),
     )
+    coordinator = ElkronCoordinator(hass, client, interval)
 
     try:
         await coordinator.async_config_entry_first_refresh()

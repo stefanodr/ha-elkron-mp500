@@ -64,7 +64,7 @@ If you set a disarm code, DISARM opens a **numeric keypad** (services `elkron_mp
 |---|---|
 | IT500WEB IP address | The module's IP (the one you open in the browser for the Web Server). |
 | TCP port | The default one (leave it unless you changed it). |
-| Polling interval | How often to read the state, in seconds. 10 s is fine; use 1–2 s for motion sensors. Min 1, max 300. |
+| Polling interval | How often to read the state, in seconds. Default 60 s, min 30, max 600 (each reading is a complete session on the panel). |
 | Web Server user / password | **Optional.** The same user and password you use on the module's web page. Used **once** to read the names; **not stored**. Leave empty to get "Ingresso N". |
 | Plant code | **Optional.** 8 digits. Keep the factory value (pre-filled) if you did not change it. |
 | Technical code | **Optional.** Keep the factory value (pre-filled) if you did not change it. |
@@ -83,11 +83,13 @@ The *plant code* and *technical code* are those set on the panel (Hi-Connect use
 ## Living with the app, the Web Server and Hi-Connect
 
 The panel accepts **one web login at a time**. So the integration:
-- reads the state over the module's TCP channel and **does not keep a web session open**: the app, the web page and Hi-Connect stay usable while Home Assistant runs;
-- makes a web login only to read the names; it lasts less than a second and is closed immediately;
+- on every reading (every 60 seconds by default) opens a complete session, reads the state and closes it as Hi-Connect does: it lasts 2-3 seconds, and between two readings the **web page, the app and Hi-Connect are free**;
+- if you are using the web page, the app or Hi-Connect at that moment, the reading fails and the integration retries later (1, 2, 4… up to 15 minutes), without bothering you;
+- keeping a session open all the time does not work: the panel serves one user at a time and closes the connection after about a minute anyway;
+- also makes a web login to read the names; it lasts less than a second and is closed immediately;
 - if the Web Server is busy while you read the names, you will see "The Web Server is busy": try again shortly.
 
-Every session opening is written in the panel's event history (user TECNICO). The `Sistema` entity has a **`sessioni_aperte`** attribute (sessions opened since start): it should stay close to 1. If it keeps growing, the connection keeps dropping: open an issue with the log.
+Every session opening is written in the panel's event history (user TECNICO). The `Sistema` entity has a **`sessioni_aperte`** attribute (sessions opened since start): it counts the sessions opened since start and grows by one at every reading, which is normal. With a 60 second interval that is about 1440 a day in the panel's history: raise the interval if you want a cleaner history.
 
 ## Inputs: wired, wireless and sensors
 

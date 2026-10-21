@@ -147,13 +147,14 @@ async def main():
     try:
         s = await client.read_state()
         assert s["global_state"] == proto.STATE_DISARMED and s["inputs"] == [0] * 9, s
-        assert panel.mode_calls == [2, 3], panel.mode_calls
+        assert panel.mode_calls == [2, 3, 2], panel.mode_calls  # login (2,3) + exit (2)
+        assert client._http is None and client._writer is None  # nothing left open between readings
         assert client.model == "ELKRON - MP500/8" and panel.clogins == [{"plantid": "55555555", "code": "000000"}]
         print("read disarmed (model read from info.cgi): OK")
 
         await client.arm()
         assert panel.armed and proto.CMD_ARM in panel.tcp_frames
-        assert panel.mode_calls == [2, 3, 2, 3], panel.mode_calls  # bootstrap only
+        assert panel.mode_calls == [2, 3, 2, 2, 3, 2], panel.mode_calls  # read, then arm session
         assert (await client.read_state())["global_state"] == proto.STATE_ARMED
         print("arm over TCP + state confirmed: OK")
 
