@@ -1,8 +1,8 @@
 # Changelog
 
-## 1.5.3 (prova)
+## 1.5.4 (prova)
 - Dopo un accesso fallito a IT500WEB (per esempio errore 404) l'integrazione aspetta 1 minuto, poi 2, 4... fino a 15 minuti prima di riprovare, invece di ripetere il login a ogni lettura.
-- Keepalive TCP ogni 3 secondi invece di 8 volte al secondo (Hi-Connect lo fa solo con la finestra aperta).
+- Keepalive TCP lasciato come nella cattura di Hi-Connect (circa 8 al secondo): ogni 3 secondi la centrale chiudeva la connessione circa una volta al minuto.
 - Ogni chiusura della sessione TCP per errore è ora registrata come avviso, con il motivo e il numero di sessioni aperte, per capire perché si riapre.
 
 ## 1.5.2

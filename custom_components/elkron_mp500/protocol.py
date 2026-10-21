@@ -26,10 +26,10 @@ CMD_MODE_3 = {"cmd": 3}
 # trying again instead of repeating the login on every poll.
 BACKOFF_FIRST = 60.0
 BACKOFF_MAX = 900.0
-# Seconds between TCP keepalives while the socket is idle. Hi-Connect sends them
-# several times a second, but only while its window is open; doing that day and
-# night is a lot for this module.
-KEEPALIVE_INTERVAL = 3.0
+# Seconds between TCP keepalives, as in the Hi-Connect capture. A slower rate
+# (3 s) was tried in 1.5.3 and made the panel reset the TCP connection about
+# once a minute, so the capture's rhythm is kept.
+KEEPALIVE_INTERVAL = 0.12
 
 CMD_START = bytes.fromhex("81 55 55 00 00 00 00 60 fe f6 03")
 
