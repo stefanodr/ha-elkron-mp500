@@ -510,7 +510,7 @@ cards:
   styles:
     card:
     - background: transparent
-    - border: 1px solid '#525b6b'
+    - border: "1px solid #525b6b"
     - border-radius: 10px
     - padding: 8px
     - margin: 6px 0
@@ -536,7 +536,7 @@ cards:
       icon:
       - color: '#e0a800'
       card:
-      - border: 1px solid '#e0a800'
+      - border: "1px solid #e0a800"
 - type: grid
   columns: 3
   square: false
