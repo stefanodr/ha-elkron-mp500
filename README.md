@@ -110,6 +110,7 @@ Si usa il comando TCP di inserimento/disinserimento totale della centrale. **Ins
 - **Inserimento totale** = frame verificato con tutti i settori (maschera `ff 00`). Impianti con più di 8 settori potrebbero comportarsi diversamente.
 - Valori di ingresso diversi da `00` e `02` (per esempio ingresso escluso, manomissione, allarme) non sono noti: guarda `raw_state` e segnalali.
 - Nelle prove sul mio impianto due ingressi (una porta doppia e un EIR wireless) non hanno mostrato variazioni di stato nei byte letti: la corrispondenza fra alcuni sensori wireless e ingressi potrebbe non essere diretta.
+- La centrale accetta un solo accesso web alla volta: per pagina web, app Android o Hi-Connect spegni prima l'interruttore `Connessione centrale` (riprende da solo dopo 15 minuti).
 - Il protocollo non è documentato: un aggiornamento firmware del modulo può cambiarlo.
 
 ## Sicurezza
@@ -127,6 +128,7 @@ Si usa il comando TCP di inserimento/disinserimento totale della centrale. **Ins
 | "Codice impianto o codice tecnico non accettati" | Codici scritti giusti? Li hai cambiati sulla centrale? |
 | "Utente o password del Web Server non validi" | Stesse credenziali della pagina web del modulo. |
 | Sensori sempre "non disponibili" | Log di Home Assistant (`custom_components.elkron_mp500`); `sessioni_aperte`. |
+| Pagina web / app non entrano ("autenticazione fallita") | Spegni `switch.elkron_mp500_connessione`: la centrale tiene un solo accesso web alla volta. |
 | Inserimento: "Stato dopo il comando non confermato" | La centrale non ha cambiato stato (es. ingressi aperti che bloccano l'inserimento): controlla sulla centrale. |
 
 Per il log dettagliato aggiungi in `configuration.yaml`:

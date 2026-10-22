@@ -110,6 +110,8 @@ It uses the panel's total arm/disarm TCP command. **Total arming and disarming a
 - **Total arming** = frame verified with all sectors (mask `ff 00`). Installations with more than 8 sectors may behave differently.
 - Input values other than `00` and `02` (for example excluded, tamper, alarm) are unknown: look at `raw_state` and report them.
 - In my tests two inputs (a double door and a wireless PIR) did not change in the bytes read: the mapping of some wireless sensors to inputs may not be direct.
+- The panel accepts one web login at a time: for the web page, the Android app or Hi-Connect turn off the `Connessione centrale` switch first (it resumes by itself after 15 minutes).
+- The panel accepts one web login at a time: for the web page, the Android app or Hi-Connect turn off the `Connessione centrale` switch first (it resumes by itself after 15 minutes).
 - The protocol is undocumented: a module firmware update may change it.
 
 ## Security
@@ -127,6 +129,7 @@ It uses the panel's total arm/disarm TCP command. **Total arming and disarming a
 | "The panel did not accept the plant code or technical code" | Typed correctly? Did you change them on the panel? |
 | "Invalid Web Server user or password" | Same credentials as the module's web page. |
 | Sensors always "unavailable" | Home Assistant log (`custom_components.elkron_mp500`); `sessioni_aperte`. |
+| Web page / app cannot log in ("authentication failed") | Turn off `switch.elkron_mp500_connessione`: the panel holds one web login at a time. |
 | Arming: "State after the command not confirmed" | The panel did not change state (e.g. open inputs blocking arming): check on the panel. |
 
 For a detailed log add to `configuration.yaml`:
