@@ -26,6 +26,10 @@ CMD_MODE_3 = {"cmd": 3}
 # trying again instead of repeating the login on every poll.
 BACKOFF_FIRST = 60.0
 BACKOFF_MAX = 900.0
+# Seconds between TCP keepalives, as in the Hi-Connect capture.
+KEEPALIVE_INTERVAL = 0.12
+# The pause that frees the panel for the web page / app ends by itself.
+DEFAULT_PAUSE_MINUTES = 15
 
 CMD_START = bytes.fromhex("81 55 55 00 00 00 00 60 fe f6 03")
 
@@ -82,6 +86,10 @@ class ElkronBusyError(ElkronProtocolError):
 
 class ElkronBackoffError(ElkronBusyError):
     """A new login is postponed after a recent failure (not an error by itself)."""
+
+
+class ElkronPausedError(ElkronProtocolError):
+    """The connection is paused on purpose, to leave the panel to the web page or the app."""
 
 
 class ElkronRejectedError(ElkronProtocolError):
@@ -197,6 +205,9 @@ class ElkronTcpClient:
         self._started = False
         self.bootstraps = 0  # HTTP+TCP sessions opened since start (diagnostic)
         self._failures = 0  # consecutive failed bootstraps
+        self.paused = False
+        self.resume_at = 0.0  # time.monotonic() when a pause ends
+        self.on_login = None  # called after every successful web login (counter)
         self._retry_at = 0.0  # time.monotonic() before which no new login is tried
 
     @property
@@ -255,6 +266,14 @@ class ElkronTcpClient:
                 # listener is opened only after CLOGIN and the two mode calls.
                 info = await self._http_request("/sys/info.cgi")
                 self.model = (info.get("data") or {}).get("cmodel") or self.model
+                # info.cgi needs no login and says whether somebody else is logged
+                # in (sesstate -1: nobody). Do not even try to log in then.
+                sesstate = (info.get("data") or {}).get("sesstate")
+                if isinstance(sesstate, int) and sesstate != -1:
+                    raise ElkronBusyError(
+                        "Un altro accesso (pagina web, app o Hi-Connect) è aperto "
+                        f"sulla centrale (sesstate {sesstate})"
+                    )
                 try:
                     login = await self._http_request("/user/clogin.cgi", self._login)
                 except ElkronRejectedError as err:
@@ -270,6 +289,11 @@ class ElkronTcpClient:
                 await self._http_request("/sys/mode.cgi", CMD_MODE_3)
                 await self._http_request("/sys/info.cgi")
             except Exception as err:
+                if isinstance(err, ElkronBusyError) and not logged_in:
+                    # Somebody else is using the panel: just wait, no penalty.
+                    await self._http.close()
+                    self._http = None
+                    raise
                 if logged_in:
                     # The panel keeps a web login for about two minutes after the
                     # last request: leaving it would make every next login fail.
@@ -290,6 +314,11 @@ class ElkronTcpClient:
             self._retry_at = 0.0
             self.bootstraps += 1
             _LOGGER.info("Sessione IT500WEB aperta (n. %s)", self.bootstraps)
+            if self.on_login is not None:
+                try:
+                    self.on_login()
+                except Exception:  # noqa: BLE001 - the counter must never break the login
+                    _LOGGER.debug("Contatore login non aggiornato", exc_info=True)
             self._refresh_task = asyncio.create_task(self._refresh_http_session())
 
     async def _stop_http_refresh(self) -> None:
@@ -478,7 +507,28 @@ class ElkronTcpClient:
                 await self._release_http_session()
                 raise
             self._started = True
+            self._keepalive_task = asyncio.create_task(self._tcp_keepalive())
             return self._reader, self._writer
+
+    async def _tcp_keepalive(self) -> None:
+        """Hi-Connect keeps the socket alive with frequent 0x65/0x16 pairs."""
+        try:
+            while self._writer is not None and not self._writer.is_closing():
+                await asyncio.sleep(KEEPALIVE_INTERVAL)
+                async with self._tcp_lock:
+                    if self._reader is None or self._writer is None:
+                        return
+                    await self._exchange(
+                        self._reader,
+                        self._writer,
+                        CMD_KEEPALIVE,
+                        None,
+                        allow_ack_only=True,
+                    )
+        except asyncio.CancelledError:
+            raise
+        except Exception as err:
+            _LOGGER.debug("Keepalive TCP IT500WEB non riuscito: %s", err)
 
     async def _close_tcp(self) -> None:
         task, self._keepalive_task = getattr(self, "_keepalive_task", None), None
@@ -498,24 +548,49 @@ class ElkronTcpClient:
             except Exception:
                 pass
 
-    async def _end_session(self) -> None:
+    async def _teardown(self) -> None:
         """Close TCP and leave the web session like Hi-Connect, freeing the panel."""
         await self._close_tcp()
         await self._release_http_session(reset_mode=True)
 
-    async def read_state(self) -> dict:
-        """One complete session per reading (login, TCP read, exit).
+    def _check_paused(self) -> None:
+        if not self.paused:
+            return
+        if time.monotonic() >= self.resume_at:
+            self.paused = False
+            _LOGGER.info("Pausa terminata: la connessione alla centrale riprende")
+            return
+        raise ElkronPausedError("Connessione alla centrale in pausa")
 
-        The panel accepts a single web login at a time and drops the TCP service
-        about a minute after the login is released, so keeping a connection open
-        does not work. Each reading opens a session and closes it, which leaves
-        the web page, the app and Hi-Connect free between two readings.
-        """
+    async def pause(self, minutes: float = DEFAULT_PAUSE_MINUTES) -> None:
+        """Leave the panel to the web page / the app. Ends by itself after `minutes`."""
         async with self._op_lock:
+            self.paused = True
+            self.resume_at = time.monotonic() + minutes * 60
+            await self._teardown()
+        _LOGGER.info("Connessione alla centrale in pausa per %s minuti", minutes)
+
+    def resume(self) -> None:
+        self.paused = False
+        self._retry_at = 0.0
+
+    async def read_state(self) -> dict:
+        """Read the state over one long-lived session (login + TCP kept open).
+
+        The panel was found to stop answering after many logins, and to drop the
+        TCP service shortly after the web login is released, so one session is
+        kept for as long as it lasts, as Hi-Connect does. Because the panel
+        serves a single web login, the connection can be paused (switch) to let
+        the web page or the app in.
+        """
+        self._check_paused()
+        async with self._op_lock:
+            self._check_paused()
             try:
                 return await self._read_state_locked()
-            finally:
-                await self._end_session()
+            except Exception:
+                await self._teardown()
+                raise
 
     async def _read_global_state(
         self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter
@@ -567,15 +642,15 @@ class ElkronTcpClient:
         """Send the TCP arm/disarm command and confirm it via the global state.
 
         /sys/mode.cgi does NOT arm or disarm: it only switches the module's
-        sysmode (1 idle, 2/3 TCP service). Arm/disarm is TCP command 0x11.
-        The command is sent after a fresh Hi-Connect-style bootstrap (HTTP
-        login, mode 2/3, TCP start) so the panel sees the captured sequence.
+        sysmode (1 idle, 2/3 TCP service). Arm/disarm is TCP command 0x11, sent on
+        the session that is already open (as in the Hi-Connect capture), so a
+        command costs no extra login.
         """
         command = CMD_ARM if armed else CMD_DISARM
         expected = STATE_ARMED if armed else STATE_DISARMED
+        self._check_paused()
         async with self._op_lock:
-            await self._close_tcp()
-            await self._release_http_session()
+            self._check_paused()
             # A command is an explicit request: do not wait for the back-off of the
             # periodic readings, and try once more if another web login (app,
             # Hi-Connect, web page) is busy for a few seconds.
@@ -606,8 +681,9 @@ class ElkronTcpClient:
                 raise ElkronProtocolError(
                     f"Stato dopo il comando non confermato: {state.hex(' ')}"
                 )
-            finally:
-                await self._end_session()
+            except Exception:
+                await self._teardown()
+                raise
 
     async def arm(self) -> None:
         """Arm the system with TCP command 0x11."""
@@ -618,14 +694,4 @@ class ElkronTcpClient:
         await self._set_armed(False)
 
     async def close(self) -> None:
-        await self._close_tcp()
-        await self._stop_http_refresh()
-        if self._http is not None and not self._http.closed:
-            try:
-                # Hi-Connect resets the interface mode and logs out on exit.
-                await self._http_request("/sys/mode.cgi", CMD_MODE_2)
-                await self._http_request("/user/logout.cgi", {})
-            except Exception as err:
-                _LOGGER.debug("Chiusura sessione IT500WEB: %s", err)
-            await self._http.close()
-        self._http = None
+        await self._teardown()

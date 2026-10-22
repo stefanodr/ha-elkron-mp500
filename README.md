@@ -64,7 +64,7 @@ Se hai impostato il codice, DISINSERISCI apre un **tastierino numerico** (serviz
 |---|---|
 | Indirizzo IP IT500WEB | L'IP del modulo (lo stesso che apri nel browser per il Web Server). |
 | Porta TCP | Quella predefinita (lasciala se non l'hai cambiata). |
-| Intervallo di polling | Ogni quanti secondi leggere lo stato. Predefinito 60 s, minimo 30, massimo 600 (ogni lettura è una sessione completa sulla centrale). |
+| Intervallo di polling | Ogni quanti secondi leggere lo stato. Predefinito 10 s, minimo 1, massimo 300. |
 | Utente / Password Web Server | **Facoltativi.** Sono lo stesso utente e la stessa password con cui entri nella pagina web del modulo. Servono **una sola volta** per leggere i nomi e **non vengono salvati**. Lasciali vuoti per avere "Ingresso N". |
 | Codice impianto | **Facoltativo.** 8 cifre. Lascia il valore di fabbrica (precompilato) se non l'hai cambiato. |
 | Codice tecnico | **Facoltativo.** Lascia il valore di fabbrica (precompilato) se non l'hai cambiato. |
@@ -82,18 +82,14 @@ Il *codice impianto* e il *codice tecnico* sono quelli impostati sulla centrale 
 
 ## Come funziona la convivenza con app, Web Server e Hi-Connect
 
-La centrale accetta **un solo accesso web alla volta**. Per questo l'integrazione:
-- a ogni lettura (di default ogni 60 secondi) apre una sessione completa, legge lo stato e la chiude come fa Hi-Connect: dura 2-3 secondi, e tra una lettura e l'altra la **pagina web, l'app e Hi-Connect sono liberi**;
-- se in quel momento stai usando la pagina web, l'app o Hi-Connect, la lettura fallisce e l'integrazione riprova più tardi (1, 2, 4… fino a 15 minuti), senza disturbarti;
-- tenere aperta una sessione in modo continuo non funziona: la centrale la tiene per un solo utente alla volta e chiude comunque la connessione dopo circa un minuto;
-- fa un login web anche per leggere i nomi, dura meno di un secondo e viene chiuso subito;
-- se il Web Server è occupato mentre leggi i nomi, vedrai "Il Web Server è occupato": riprova tra poco.
+La centrale accetta **un solo accesso web alla volta**, e ogni login viene scritto nel suo storico; in prove lunghe, centinaia di login al giorno hanno portato il Web Server della centrale a non rispondere più (serve staccare la corrente). Per questo l'integrazione:
+- fa **un solo login e lo tiene aperto**, come Hi-Connect, leggendo lo stato ogni 10 secondi (predefinito) sulla stessa connessione; inserimento e disinserimento usano la stessa sessione;
+- prima di entrare controlla se qualcuno è già collegato e, in quel caso, non prova nemmeno a fare login;
+- offre l'interruttore **`switch.elkron_mp500_connessione`**: per usare la **pagina web o l'app Android** spegnilo (l'integrazione esce dal login e le entità risultano non disponibili); riprende da sola dopo 15 minuti, oppure quando lo riaccendi. Il servizio `elkron_mp500.pause` permette di scegliere i minuti (utile nelle automazioni). Per usare Hi-Connect fai lo stesso;
+- se la lettura fallisce, mostra l'ultimo stato valido per 90 secondi, poi le entità diventano non disponibili;
+- fa un login web anche per leggere i nomi, dura meno di un secondo e viene chiuso subito.
 
-Ogni apertura di sessione viene scritta nello storico eventi della centrale (utente TECNICO). L'entità `Sistema` ha l'attributo **`sessioni_aperte`**: è il numero di sessioni aperte dall'avvio: cresce di una a ogni lettura, è normale. Con un intervallo di 60 secondi sono circa 1440 al giorno nello storico della centrale: se ti serve uno storico più pulito, aumenta l'intervallo.
-
-## Gli ingressi: cablati, wireless e sensori
-
-La centrale ragiona per **ingressi**, non per singole porte o finestre. Una MP500/8 ha **8 ingressi cablati**, e a ciascuno si possono collegare più contatti in serie (per esempio più porte e finestre sullo stesso ingresso). I sensori **wireless** (per esempio un EIR) si aggiungono come ingressi ulteriori. Home Assistant vede quindi **un sensore per ingresso**, non uno per ogni finestra o porta fisica: se un ingresso raggruppa tre finestre, ti dirà che "qualcosa" su quell'ingresso è aperto.
+L'interruttore ha gli attributi **`login_totali`** e **`contatore_dal`**: i login fatti dall'integrazione dall'ultima volta che hai azzerato il contatore. Dopo aver riavviato la centrale chiama il servizio `elkron_mp500.reset_login_counter`: così si vede quanti login la centrale regge. L'entità `Sistema` ha `sessioni_aperte` (sessioni dall'avvio di Home Assistant); con la sessione tenuta aperta deve restare basso.
 
 ## Entità create
 Gli `entity_id` sono fissi e non cambiano se rinomini gli ingressi: `alarm_control_panel.elkron_mp500_sistema` e `binary_sensor.elkron_mp500_ingresso_1`, `..._2`, ... Usali nelle dashboard e nelle automazioni.
@@ -101,6 +97,7 @@ Gli `entity_id` sono fissi e non cambiano se rinomini gli ingressi: `alarm_contr
 
 - `binary_sensor.*ingresso_N*`: acceso (aperto/rilevato) = valore `02`, spento = `00`. Attributi: `raw_state` (valore grezzo), `settori`.
 - `alarm_control_panel.*sistema*`: `disarmed`, `armed_away`; con altri valori (per esempio solo alcuni settori inseriti dall'app) mostra **armed_custom_bypass** e l'attributo `stato_grezzo`. Attributo `sessioni_aperte`.
+- `switch.elkron_mp500_connessione`: acceso = integrazione collegata; spento = in pausa per pagina web/app.
 
 ## Inserimento e disinserimento
 

@@ -75,6 +75,7 @@ class ElkronAlarmPanel(CoordinatorEntity, AlarmControlPanelEntity):
         # connection drops and each login is written to the panel's history.
         return {
             "sessioni_aperte": self._client.bootstraps,
+            "connessione_in_pausa": self._client.paused,
             "stato_grezzo": self.coordinator.data["global_state"].hex(" "),
             "cifre_digitate": len(self._digits),
         }

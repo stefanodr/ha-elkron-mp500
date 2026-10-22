@@ -14,3 +14,27 @@ keypad_submit:
     entity:
       integration: elkron_mp500
       domain: alarm_control_panel
+
+reset_login_counter:
+  name: Azzera contatore login
+  description: Da usare dopo aver riavviato la centrale; il contatore riparte da zero.
+  target:
+    entity:
+      integration: elkron_mp500
+      domain: switch
+
+pause:
+  name: Pausa connessione
+  description: Lascia la centrale libera per pagina web o app; riprende da sola.
+  target:
+    entity:
+      integration: elkron_mp500
+      domain: switch
+  fields:
+    minutes:
+      name: Minuti
+      default: 15
+      selector:
+        number:
+          min: 1
+          max: 120

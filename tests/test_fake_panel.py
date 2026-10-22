@@ -147,14 +147,16 @@ async def main():
     try:
         s = await client.read_state()
         assert s["global_state"] == proto.STATE_DISARMED and s["inputs"] == [0] * 9, s
-        assert panel.mode_calls == [2, 3, 2], panel.mode_calls  # login (2,3) + exit (2)
-        assert client._http is None and client._writer is None  # nothing left open between readings
+        assert panel.mode_calls == [2, 3], panel.mode_calls  # one login, kept open
+        assert client._http is not None and client._writer is not None
+        await client.read_state()
+        assert panel.mode_calls == [2, 3] and len(panel.clogins) == 1  # second reading: no new login
         assert client.model == "ELKRON - MP500/8" and panel.clogins == [{"plantid": "55555555", "code": "000000"}]
         print("read disarmed (model read from info.cgi): OK")
 
         await client.arm()
         assert panel.armed and proto.CMD_ARM in panel.tcp_frames
-        assert panel.mode_calls == [2, 3, 2, 2, 3, 2], panel.mode_calls  # read, then arm session
+        assert panel.mode_calls == [2, 3] and len(panel.clogins) == 1, panel.mode_calls  # same session
         assert (await client.read_state())["global_state"] == proto.STATE_ARMED
         print("arm over TCP + state confirmed: OK")
 
@@ -172,6 +174,21 @@ async def main():
             assert not panel.armed and (await client.read_state())["global_state"] == proto.STATE_DISARMED
             print(f"arm/disarm with event mode '{mode}': OK")
         panel.event_mode = "normal"
+
+        # Pause: the login is released (web/app can enter), reads are refused, then resume.
+        await client.pause(15)
+        assert panel.mode_calls[-1] == 2 and client._http is None and client._writer is None
+        try:
+            await client.read_state()
+        except proto.ElkronPausedError:
+            print("pause releases the login and refuses reads: OK")
+        else:
+            raise AssertionError("read during pause must raise ElkronPausedError")
+        client.resume()
+        n = len(panel.clogins)
+        assert (await client.read_state())["global_state"] == proto.STATE_DISARMED
+        assert len(panel.clogins) == n + 1
+        print("resume logs in again: OK")
 
         panel.obey = False
         try:

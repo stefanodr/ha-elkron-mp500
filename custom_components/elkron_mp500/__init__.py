@@ -1,11 +1,13 @@
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 import logging
+import time
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -25,11 +27,45 @@ from .const import (
     DOMAIN,
     input_entity_id,
 )
-from .protocol import ElkronBackoffError, ElkronTcpClient
+from .protocol import ElkronBackoffError, ElkronBusyError, ElkronPausedError, ElkronTcpClient
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["binary_sensor", "alarm_control_panel"]
+PLATFORMS = ["binary_sensor", "alarm_control_panel", "switch"]
+
+# How long the last valid state is shown after a failed reading before the
+# entities become unavailable (a stale door state must not look current).
+STALE_GRACE = 90
+
+
+class LoginCounter:
+    """Logins made on the panel since the user last said it was restarted.
+
+    The panel was seen to stop answering after many logins; this number tells how
+    many it can take. It survives Home Assistant restarts.
+    """
+
+    def __init__(self, hass: HomeAssistant, entry_id: str) -> None:
+        self._store = Store(hass, 1, f"{DOMAIN}_logins_{entry_id}")
+        self.count = 0
+        self.since = datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+    async def async_load(self) -> None:
+        data = await self._store.async_load() or {}
+        self.count = int(data.get("count", 0))
+        self.since = data.get("since", self.since)
+
+    def _data(self) -> dict:
+        return {"count": self.count, "since": self.since}
+
+    def increment(self) -> None:
+        self.count += 1
+        self._store.async_delay_save(self._data, 30)
+
+    def reset(self) -> None:
+        self.count = 0
+        self.since = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        self._store.async_delay_save(self._data, 1)
 
 
 class ElkronCoordinator(DataUpdateCoordinator[dict]):
@@ -38,6 +74,7 @@ class ElkronCoordinator(DataUpdateCoordinator[dict]):
     def __init__(self, hass: HomeAssistant, client: ElkronTcpClient, interval: int) -> None:
         self.client = client
         self._last_valid_data: dict | None = None
+        self._last_ok = 0.0
         super().__init__(
             hass,
             _LOGGER,
@@ -49,22 +86,28 @@ class ElkronCoordinator(DataUpdateCoordinator[dict]):
         try:
             data = await self.client.read_state()
             self._last_valid_data = data
+            self._last_ok = time.monotonic()
             return data
+        except ElkronPausedError as err:
+            # On purpose: show the entities as unavailable, not as stale.
+            raise UpdateFailed(str(err)) from err
         except Exception as err:
-            # If we have a previously valid state, preserve it for transient
-            # communication errors. Log a warning so stale data is visible
-            # to the administrator; the next scheduled poll tries again.
-            if self._last_valid_data is not None:
-                if isinstance(err, ElkronBackoffError):
+            quiet = isinstance(err, (ElkronBackoffError, ElkronBusyError))
+            fresh = time.monotonic() - self._last_ok < STALE_GRACE
+            if self._last_valid_data is not None and fresh:
+                # Short interruption: keep the last state for a while.
+                if quiet:
                     _LOGGER.debug("Lettura rimandata: %s", err)
-                    return self._last_valid_data
-                _LOGGER.warning(
-                    "Lettura TCP IT500WEB non riuscita; mantengo temporaneamente "
-                    "l'ultimo stato valido. Errore: %s",
-                    err,
-                )
+                else:
+                    _LOGGER.warning(
+                        "Lettura IT500WEB non riuscita; mantengo per poco l'ultimo stato valido. "
+                        "Errore: %s",
+                        err,
+                    )
                 return self._last_valid_data
-            raise UpdateFailed(f"Comunicazione TCP IT500WEB: {err}") from err
+            if quiet:
+                _LOGGER.debug("Lettura non possibile: %s", err)
+            raise UpdateFailed(f"Comunicazione IT500WEB: {err}") from err
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -128,6 +171,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ),
     )
     coordinator = ElkronCoordinator(hass, client, interval)
+    counter = LoginCounter(hass, entry.entry_id)
+    await counter.async_load()
+    client.on_login = counter.increment
 
     try:
         await coordinator.async_config_entry_first_refresh()
@@ -138,6 +184,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         "client": client,
         "coordinator": coordinator,
+        "logins": counter,
     }
     entry.async_on_unload(entry.add_update_listener(_async_options_updated))
     async_fix_entity_ids(er.async_get(hass), entry)

@@ -119,11 +119,11 @@ async def main():
     print("stable entity ids + one-time rename: OK")
 
     # 3) alarm panel exposes the session counter
-    client = SimpleNamespace(bootstraps=3, model=None)
+    client = SimpleNamespace(bootstraps=3, model=None, paused=False)
     coordinator.data = {"inputs": [0] * 9, "global_state": b"\x00\x00"}
     panel = alarm_control_panel.ElkronAlarmPanel(coordinator, client, SimpleNamespace(entry_id="e1"))
     assert panel.entity_id == "alarm_control_panel.elkron_mp500_sistema"
-    assert panel.extra_state_attributes == {"sessioni_aperte": 3, "stato_grezzo": "00 00", "cifre_digitate": 0}
+    assert panel.extra_state_attributes == {"sessioni_aperte": 3, "connessione_in_pausa": False, "stato_grezzo": "00 00", "cifre_digitate": 0}
     A = alarm_control_panel.AlarmControlPanelState
     assert panel.state == A.DISARMED
     coordinator.data["global_state"] = b"\xff\x00"
@@ -192,7 +192,7 @@ async def main():
     print("options flow (save, refresh, busy, no credentials): OK")
 
     try:
-        form["data_schema"]({"scan_interval": 29})
+        form["data_schema"]({"scan_interval": 0})
     except Exception:
         print("interval 0 rejected: OK")
     else:

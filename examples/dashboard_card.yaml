@@ -92,12 +92,12 @@ cards:
     style: "ha-card {\n  background: transparent !important;\n  border: none !important;\n  box-shadow: none !important;\n  padding: 0 !important;\n}\n#root {\n  gap: 6px !important;\n}\n"
   cards:
   - type: custom:button-card
-    entity: alarm_control_panel.elkron_mp500_sistema
+    entity: switch.elkron_mp500_connessione
     name: RETE
     icon: mdi:circle
     show_state: false
     tap_action:
-      action: none
+      action: toggle
     styles:
       card:
       - background: transparent
@@ -116,6 +116,11 @@ cards:
       - letter-spacing: 1px
       - font-weight: bold
     state:
+    - value: 'off'
+      name: IN PAUSA
+      styles:
+        icon:
+        - color: '#e0a800'
     - value: unavailable
       styles:
         icon:

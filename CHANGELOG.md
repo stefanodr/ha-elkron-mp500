@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.6.0 (prova)
+- **Una sola sessione, tenuta aperta** (come Hi-Connect), invece di un login a ogni lettura: le versioni 1.5.6-1.5.8 aprivano centinaia di sessioni al giorno e la centrale alla fine smetteva di rispondere sul web. Intervallo di lettura di nuovo 10 s (minimo 1, massimo 300).
+- **Interruttore `switch.elkron_mp500_connessione`.** La centrale accetta un solo accesso web alla volta: per usare pagina web o app Android spegni l'interruttore, l'integrazione esce dal login e resta ferma; riprende da sola dopo 15 minuti o quando lo riaccendi. Nella card di esempio la spia RETE è questo interruttore (verde = collegata, ambra = in pausa).
+- Prima di fare il login l'integrazione controlla se qualcuno è già dentro (`sesstate`): in quel caso non prova ad entrare e non allunga le attese.
+- Inserimento e disinserimento usano la sessione già aperta, senza un nuovo login.
+- Se la lettura fallisce, l'ultimo stato valido resta per 90 secondi, poi le entità diventano non disponibili.
+- Contatore dei login fatti dall'integrazione dall'ultima ripartenza della centrale (attributi `login_totali` e `contatore_dal` dell'interruttore), per capire il limite reale.
+
 ## 1.5.8 (prova)
 - **Corretto un login lasciato aperto.** Se l'accesso riusciva ma un passo successivo veniva rifiutato (per esempio il cambio di modalità), l'integrazione chiudeva la connessione senza uscire dal login. La centrale lo teneva per circa due minuti e rifiutava gli accessi successivi, anche quelli dell'integrazione stessa, con attese sempre più lunghe. Ora esce sempre dal login.
 - Le letture rimandate per l'attesa dopo un errore sono scritte nel registro di debug e non più tra gli avvisi.

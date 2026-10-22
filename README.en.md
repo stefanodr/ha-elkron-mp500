@@ -64,7 +64,7 @@ If you set a disarm code, DISARM opens a **numeric keypad** (services `elkron_mp
 |---|---|
 | IT500WEB IP address | The module's IP (the one you open in the browser for the Web Server). |
 | TCP port | The default one (leave it unless you changed it). |
-| Polling interval | How often to read the state, in seconds. Default 60 s, min 30, max 600 (each reading is a complete session on the panel). |
+| Polling interval | How often to read the state, in seconds. Default 10 s, min 1, max 300. |
 | Web Server user / password | **Optional.** The same user and password you use on the module's web page. Used **once** to read the names; **not stored**. Leave empty to get "Ingresso N". |
 | Plant code | **Optional.** 8 digits. Keep the factory value (pre-filled) if you did not change it. |
 | Technical code | **Optional.** Keep the factory value (pre-filled) if you did not change it. |
@@ -82,18 +82,14 @@ The *plant code* and *technical code* are those set on the panel (Hi-Connect use
 
 ## Living with the app, the Web Server and Hi-Connect
 
-The panel accepts **one web login at a time**. So the integration:
-- on every reading (every 60 seconds by default) opens a complete session, reads the state and closes it as Hi-Connect does: it lasts 2-3 seconds, and between two readings the **web page, the app and Hi-Connect are free**;
-- if you are using the web page, the app or Hi-Connect at that moment, the reading fails and the integration retries later (1, 2, 4… up to 15 minutes), without bothering you;
-- keeping a session open all the time does not work: the panel serves one user at a time and closes the connection after about a minute anyway;
-- also makes a web login to read the names; it lasts less than a second and is closed immediately;
-- if the Web Server is busy while you read the names, you will see "The Web Server is busy": try again shortly.
+The panel accepts **one web login at a time** and writes every login to its history; in long tests, hundreds of logins a day made the panel's Web Server stop answering (power cycle needed). So the integration:
+- makes **a single login and keeps it open**, like Hi-Connect, reading the state every 10 seconds (default) over the same connection; arming and disarming use that same session;
+- checks before logging in whether somebody is already connected and, if so, does not even try;
+- provides the **`switch.elkron_mp500_connessione`** switch: to use the **web page or the Android app** turn it off (the integration logs out and the entities become unavailable); it resumes by itself after 15 minutes, or when you turn it on again. The `elkron_mp500.pause` service lets you choose the minutes (useful in automations). Do the same for Hi-Connect;
+- if a reading fails, shows the last valid state for 90 seconds, then the entities become unavailable;
+- also makes a web login to read the names; it lasts less than a second and is closed immediately.
 
-Every session opening is written in the panel's event history (user TECNICO). The `Sistema` entity has a **`sessioni_aperte`** attribute (sessions opened since start): it counts the sessions opened since start and grows by one at every reading, which is normal. With a 60 second interval that is about 1440 a day in the panel's history: raise the interval if you want a cleaner history.
-
-## Inputs: wired, wireless and sensors
-
-The panel thinks in **inputs**, not in individual doors or windows. An MP500/8 has **8 wired inputs**, and several contacts can be wired in series on each (for example several doors and windows on one input). **Wireless** sensors (such as a wireless PIR) are added as further inputs. Home Assistant therefore sees **one sensor per input**, not one per physical door or window: if an input groups three windows, it tells you that "something" on that input is open.
+The switch has **`login_totali`** and **`contatore_dal`** attributes: logins made by the integration since you last reset the counter. After restarting the panel call the `elkron_mp500.reset_login_counter` service: that shows how many logins the panel can take. The `Sistema` entity has `sessioni_aperte` (sessions since Home Assistant started); with a held session it should stay low.
 
 ## Entities
 Entity ids are fixed and do not change if you rename the inputs: `alarm_control_panel.elkron_mp500_sistema` and `binary_sensor.elkron_mp500_ingresso_1`, `..._2`, ... Use them in dashboards and automations.
@@ -101,6 +97,7 @@ Entity ids are fixed and do not change if you rename the inputs: `alarm_control_
 
 - `binary_sensor.*ingresso_N*`: on (open/detected) = value `02`, off = `00`. Attributes: `raw_state` (raw value), `settori`.
 - `alarm_control_panel.*sistema*`: `disarmed`, `armed_away`; with any other value (for example only some sectors armed from the app) it shows **armed_custom_bypass** and the `stato_grezzo` attribute. Also the `sessioni_aperte` attribute.
+- `switch.elkron_mp500_connessione`: on = integration connected; off = paused so the web page/app can log in.
 
 ## Arming and disarming
 
