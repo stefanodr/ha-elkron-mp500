@@ -115,6 +115,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     Version 5: the web user and password are no longer stored (they are only
     needed once, to read the names), and the plant/technical codes are saved.
+    Version 6: entities created by older versions are moved once to the stable
+    entity ids; after that, a rename made by the user is kept.
     """
     if entry.version < 5:
         data = {k: v for k, v in entry.data.items() if k not in (CONF_WEB_USER, CONF_WEB_PASSWORD)}
@@ -122,6 +124,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         data.setdefault(CONF_PLANT_ID, DEFAULT_PLANT_ID)
         data.setdefault(CONF_TECH_CODE, DEFAULT_TECH_CODE)
         hass.config_entries.async_update_entry(entry, data=data, version=5)
+    if entry.version < 6:
+        async_fix_entity_ids(er.async_get(hass), entry)
+        hass.config_entries.async_update_entry(entry, version=6)
     return True
 
 
@@ -187,7 +192,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "logins": counter,
     }
     entry.async_on_unload(entry.add_update_listener(_async_options_updated))
-    async_fix_entity_ids(er.async_get(hass), entry)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 

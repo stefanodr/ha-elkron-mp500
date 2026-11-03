@@ -74,7 +74,7 @@ async def _web_structure(host: str, user: str, password: str) -> tuple[dict | No
 class ElkronConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle configuration of the local Elkron MP500 TCP connection."""
 
-    VERSION = 5
+    VERSION = 6
 
     @staticmethod
     @callback
@@ -270,7 +270,8 @@ class ElkronOptionsFlow(config_entries.OptionsFlow):
                     },
                     {CONF_DISARM_CODE: "invalid_disarm_code"},
                 )
-            salt, digest = hash_code(new_code)
+            # PBKDF2 is slow on purpose: keep it off the event loop.
+            salt, digest = await self.hass.async_add_executor_job(hash_code, new_code)
             disarm = {CONF_DISARM_SALT: salt, CONF_DISARM_HASH: digest}
 
         if user_input.get(CONF_REFRESH):

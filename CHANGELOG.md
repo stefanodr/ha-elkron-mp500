@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.6.1
+- Se rinomini un'entità dall'interfaccia (per esempio un ingresso), il nome nuovo resta anche dopo un riavvio o una ricarica. Lo spostamento delle entità create dalle versioni precedenti sugli identificativi stabili ora avviene una sola volta, al passaggio a questa versione.
+- Il controllo del codice di disinserimento (e il salvataggio di un codice nuovo nelle opzioni) non blocca più Home Assistant: l'operazione, volutamente lenta, è eseguita fuori dal ciclo principale.
+
 ## 1.6.0
 - **Una sola sessione, tenuta aperta** (come Hi-Connect), invece di un login a ogni lettura: le versioni 1.5.6-1.5.8 aprivano centinaia di sessioni al giorno e la centrale alla fine smetteva di rispondere sul web. Intervallo di lettura di nuovo 10 s (minimo 1, massimo 300).
 - **Interruttore `switch.elkron_mp500_connessione`.** La centrale accetta un solo accesso web alla volta: per usare pagina web o app Android spegni l'interruttore, l'integrazione esce dal login e resta ferma; riprende da sola dopo 15 minuti o quando lo riaccendi. Nella card di esempio la spia RETE è questo interruttore (verde = collegata, ambra = in pausa).

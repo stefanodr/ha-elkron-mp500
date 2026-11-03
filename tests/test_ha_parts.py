@@ -32,6 +32,20 @@ STRUCTURE = {
 }
 
 
+class _Hass(SimpleNamespace):
+    """Just enough of hass: the slow hash runs through async_add_executor_job."""
+
+    calls = 0
+
+    async def async_add_executor_job(self, func, *args):
+        type(self).calls += 1
+        return func(*args)
+
+    def async_create_task(self, coro):
+        import asyncio as _asyncio
+        return _asyncio.ensure_future(coro)
+
+
 class FakeEntries:
     def async_update_entry(self, entry, *, data=None, options=None, version=None):
         if data is not None:
@@ -45,6 +59,17 @@ class FakeEntries:
 
 async def main():
     # 1) migration: old entries get the codes, and the stored web login is dropped
+    import inspect
+    import custom_components.elkron_mp500 as integration
+
+    moved = []
+    fake_items = [SimpleNamespace(entity_id="binary_sensor.ingresso_1_x", unique_id="e1_input_1")]
+    fake_registry = SimpleNamespace(
+        entities=SimpleNamespace(get_entries_for_config_entry_id=lambda _id: fake_items),
+        async_get=lambda eid: None,
+        async_update_entity=lambda eid, new_entity_id: moved.append((eid, new_entity_id)),
+    )
+    integration.er.async_get = lambda _hass: fake_registry
     hass = SimpleNamespace(config_entries=FakeEntries())
     entry = SimpleNamespace(
         version=4,
@@ -52,13 +77,20 @@ async def main():
         options={const.CONF_NAMES: {"7": "Portone"}},
         entry_id="e1",
     )
-    assert await async_migrate_entry(hass, entry) and entry.version == 5
+    assert await async_migrate_entry(hass, entry) and entry.version == 6
+    assert moved == [("binary_sensor.ingresso_1_x", "binary_sensor.elkron_mp500_ingresso_1")], moved  # once, at migration
     assert entry.data == {"host": "x", "port": 5555, "plant_id": "55555555", "tech_code": "000000"}, entry.data
     assert entry.options == {const.CONF_NAMES: {"7": "Portone"}}  # user names untouched
     e1 = SimpleNamespace(version=1, data={"host": "x"}, options={}, entry_id="e0")
     await async_migrate_entry(hass, e1)
-    assert e1.version == 5 and e1.data["port"] == 5555
-    print("migration: OK")
+    assert e1.version == 6 and e1.data["port"] == 5555
+    # Already at the current version: nothing is moved again, and setup never renames.
+    moved.clear()
+    entry_now = SimpleNamespace(version=6, data={"host": "x"}, options={}, entry_id="e1")
+    await async_migrate_entry(hass, entry_now)
+    assert moved == [] and entry_now.version == 6
+    assert "async_fix_entity_ids" not in inspect.getsource(integration.async_setup_entry)
+    print("migration (entity ids moved once, user renames kept): OK")
 
     # 2) sensors: count from the reply, names/sectors from the panel, manual name wins
     coordinator = SimpleNamespace(
@@ -139,7 +171,7 @@ async def main():
         data={"host": "192.168.1.50"},
         options={const.CONF_NAMES: {"1": "Ingresso principale"}},
     )
-    fake_hass = SimpleNamespace(
+    fake_hass = _Hass(
         data={const.DOMAIN: {"e1": {"coordinator": coordinator}}},
         config_entries=SimpleNamespace(
             async_get_known_entry=lambda _id: entry, async_update_entry=FakeEntries().async_update_entry
@@ -288,7 +320,7 @@ async def _gate():
     coord = MagicMock(); coord.async_request_refresh = AsyncMock(); coord.data = {}
     s, h = hash_code("123456")
     entry = _N(entry_id="e", options={CONF_DISARM_SALT: s, CONF_DISARM_HASH: h}, data={})
-    ent = ElkronAlarmPanel(coord, client, entry)
+    ent = ElkronAlarmPanel(coord, client, entry); ent.hass = _Hass()
     assert ent.code_format is not None and ent._attr_code_arm_required is False
     for bad in (None, "", "111111"):
         try:
@@ -299,7 +331,7 @@ async def _gate():
     await ent.async_alarm_disarm("123456"); client.disarm.assert_awaited_once()
     # no code configured -> unchanged behaviour
     entry2 = _N(entry_id="e", options={}, data={})
-    ent2 = ElkronAlarmPanel(coord, client, entry2)
+    ent2 = ElkronAlarmPanel(coord, client, entry2); ent2.hass = _Hass()
     assert ent2.code_format is None
     await ent2.async_alarm_disarm(None)
     assert client.disarm.await_count == 2
@@ -311,6 +343,7 @@ async def _gate():
         await ent.async_alarm_disarm("123456"); raise SystemExit("not locked")
     except ServiceValidationError as e:
         assert "bloccato" in str(e)
+    assert _Hass.calls >= 5  # the PBKDF2 check always goes through the executor
     print("entity disarm gate OK")
 
 import asyncio as _a
@@ -323,12 +356,12 @@ async def _keypad():
     coord.data = {"global_state": b"\xff\x00"}
     s, h = hash_code("123456")
     entry = _N(entry_id="e", options={CONF_DISARM_SALT: s, CONF_DISARM_HASH: h}, data={})
-    ent = ElkronAlarmPanel(coord, client, entry); ent.async_write_ha_state = lambda: None
+    ent = ElkronAlarmPanel(coord, client, entry); ent.async_write_ha_state = lambda: None; ent.hass = _Hass()
     for k in "1234567": await ent.async_keypad_press(k)
     assert ent.extra_state_attributes["cifre_digitate"] == 6   # capped at 6
     await ent.async_keypad_press("C"); assert ent.extra_state_attributes["cifre_digitate"] == 0
     for k in "123456": await ent.async_keypad_press(k)
-    ent.hass = MagicMock(); tasks = []
+    tasks = []
     ent.hass.async_create_task = lambda c: tasks.append(c)
     await ent.async_keypad_submit()
     for c in tasks: await c

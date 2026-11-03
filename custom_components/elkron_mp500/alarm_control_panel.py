@@ -119,7 +119,7 @@ class ElkronAlarmPanel(CoordinatorEntity, AlarmControlPanelEntity):
         options = getattr(self._entry, "options", {}) or {}
         return bool(options.get(CONF_DISARM_HASH) and options.get(CONF_DISARM_SALT))
 
-    def _check_disarm_code(self, code) -> None:
+    async def _check_disarm_code(self, code) -> None:
         """Raise ServiceValidationError unless the disarm code is right (if one is set)."""
         if not self._code_configured:
             return
@@ -129,14 +129,18 @@ class ElkronAlarmPanel(CoordinatorEntity, AlarmControlPanelEntity):
                 f"Troppi codici errati: disinserimento bloccato per altri {locked} secondi."
             )
         options = self._entry.options
-        if not verify_code(code, options[CONF_DISARM_SALT], options[CONF_DISARM_HASH]):
+        # PBKDF2 is slow on purpose: keep it off the event loop.
+        valid = await self.hass.async_add_executor_job(
+            verify_code, code, options[CONF_DISARM_SALT], options[CONF_DISARM_HASH]
+        )
+        if not valid:
             self._limiter.failed()
             _LOGGER.warning("Disinserimento rifiutato: codice mancante o errato")
             raise ServiceValidationError("Codice non valido: disinserimento non eseguito.")
         self._limiter.succeeded()
 
     async def async_alarm_disarm(self, code=None) -> None:
-        self._check_disarm_code(code)
+        await self._check_disarm_code(code)
         await self._async_command("Disinserimento", self._client.disarm)
 
     # ---- on-screen keypad -------------------------------------------------
@@ -162,7 +166,7 @@ class ElkronAlarmPanel(CoordinatorEntity, AlarmControlPanelEntity):
         code = self._fresh_digits()
         self._digits = ""
         self.async_write_ha_state()
-        self._check_disarm_code(code)
+        await self._check_disarm_code(code)
         self.hass.async_create_task(self._async_background_disarm())
 
     async def _async_background_disarm(self) -> None:
