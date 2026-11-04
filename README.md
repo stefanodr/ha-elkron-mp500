@@ -4,7 +4,7 @@
 
 Integrazione personalizzata, **locale** (nessun cloud), per le centrali antifurto **Elkron MP500** con il modulo di rete **IT500WEB**. Mostra gli ingressi della centrale come sensori, mostra lo stato dell'impianto e permette di **inserire e disinserire tutto l'impianto** da Home Assistant.
 
-> **English, in short:** local (no cloud) custom integration for Elkron MP500 alarm panels with the IT500WEB network module. Input sensors, panel state and total arm/disarm. Names are read from the panel automatically if you give the Web Server login once (it is not stored). Install via HACS (custom repository) or by copying `custom_components/elkron_mp500`. Not affiliated with Elkron/Urmet. Tested only on an MP500/8 (reading, total arm and disarm verified there); see "Limiti noti".
+> **English, in short:** local (no cloud) custom integration for Elkron MP500 alarm panels with the IT500WEB network module. Input sensors, panel state and total arm/disarm. Names are read from the panel automatically if you give the Web Server login once (it is not stored). Install via HACS (search "Elkron MP500") or by copying `custom_components/elkron_mp500`. Not affiliated with Elkron/Urmet. Tested only on an MP500/8 (reading, total arm and disarm verified there); see "Limiti noti".
 
 Progetto indipendente: **non è affiliato né approvato da Elkron/Urmet**. Il protocollo del modulo IT500WEB non è pubblico: l'integrazione è basata sull'analisi del traffico di rete di Hi-Connect e del Web Server. Usala a tuo rischio e, prima di fidarti dei comandi, provali con l'impianto sotto controllo.
 
@@ -43,6 +43,10 @@ Se hai impostato il codice, DISINSERISCI apre un **tastierino numerico** (serviz
 ## Installazione
 
 ### Con HACS (consigliata)
+1. In HACS cerca **Elkron MP500**.
+2. Apri l'integrazione, **Scarica**, poi **riavvia Home Assistant**.
+
+Se non la trovi nell'elenco (per esempio subito dopo la pubblicazione, che può richiedere fino a 8 ore), aggiungila come repository personalizzato:
 1. HACS → menu a tre puntini → **Repository personalizzati**.
 2. Incolla questo indirizzo nel campo "Repository":
    ```

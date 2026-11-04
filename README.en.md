@@ -43,6 +43,10 @@ If you set a disarm code, DISARM opens a **numeric keypad** (services `elkron_mp
 ## Installation
 
 ### With HACS (recommended)
+1. In HACS search for **Elkron MP500**.
+2. Open the integration, **Download**, then **restart Home Assistant**.
+
+If you cannot find it in the list (for example right after it was added to HACS, which can take up to 8 hours), add it as a custom repository:
 1. HACS → three-dot menu → **Custom repositories**.
 2. Paste this address in the "Repository" field:
    ```
