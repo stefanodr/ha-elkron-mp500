@@ -12,6 +12,8 @@ from .const import (
     CONF_TYPES,
     DEFAULT_INPUT_TYPE,
     DOMAIN,
+    ALARM_MEMORY_ENTITY_ID,
+    INPUT_ALARM,
     INPUT_OPEN,
     input_entity_id,
 )
@@ -45,6 +47,7 @@ async def async_setup_entry(
         )
         for input_id in range(1, count + 1)
     )
+    async_add_entities([ElkronAlarmMemorySensor(coordinator, entry)])
 
 
 class ElkronInputSensor(CoordinatorEntity, BinarySensorEntity):
@@ -86,7 +89,8 @@ class ElkronInputSensor(CoordinatorEntity, BinarySensorEntity):
         states = self.coordinator.data["inputs"]
         if self._input_id > len(states):
             return None
-        return states[self._input_id - 1] == INPUT_OPEN
+        # Bit test: 0x06 (open and in alarm) is open too.
+        return bool(states[self._input_id - 1] & INPUT_OPEN)
 
     @property
     def icon(self) -> str | None:
@@ -101,7 +105,36 @@ class ElkronInputSensor(CoordinatorEntity, BinarySensorEntity):
         states = self.coordinator.data["inputs"]
         if self._input_id > len(states):
             return {}
-        attrs = {"raw_state": states[self._input_id - 1]}
+        value = states[self._input_id - 1]
+        attrs = {"raw_state": value, "allarme": bool(value & INPUT_ALARM)}
         if self._sectors:
             attrs["settori"] = self._sectors
         return attrs
+
+
+class ElkronAlarmMemorySensor(CoordinatorEntity, BinarySensorEntity):
+    """On while the panel remembers an alarm raised by one or more inputs."""
+
+    _attr_should_poll = False
+    _attr_device_class = BinarySensorDeviceClass.PROBLEM
+    _attr_icon = "mdi:alarm-light"
+
+    def __init__(self, coordinator, entry: ConfigEntry) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{entry.entry_id}_alarm_memory"
+        self.entity_id = ALARM_MEMORY_ENTITY_ID
+        self._attr_name = "Memoria allarme"
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, entry.entry_id)},
+            "name": "Elkron MP500",
+            "manufacturer": "Elkron",
+            "model": coordinator.client.model or "MP500 / IT500WEB",
+        }
+
+    @property
+    def is_on(self) -> bool:
+        return bool(self.coordinator.data.get("alarm_memory"))
+
+    @property
+    def extra_state_attributes(self):
+        return {"ingressi": self.coordinator.data.get("alarm_memory", [])}

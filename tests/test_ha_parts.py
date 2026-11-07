@@ -110,13 +110,14 @@ async def main():
     )
     hass = SimpleNamespace(data={const.DOMAIN: {"e1": {"coordinator": coordinator, "client": None}}})
     await binary_sensor.async_setup_entry(hass, entry, lambda ents: created.extend(ents))
-    assert len(created) == 9
+    assert len(created) == 10 and type(created[9]).__name__ == "ElkronAlarmMemorySensor"
+    created = created[:9]
     s1, s2, s7, s9 = created[0], created[1], created[6], created[8]
     assert s1.name == "Ingresso 1 (Ingresso principale)", s1.name  # manual name wins
-    assert s2.name == "Ingresso 2" and s2.extra_state_attributes == {"raw_state": 0}  # not in the panel data
+    assert s2.name == "Ingresso 2" and s2.extra_state_attributes == {"raw_state": 0, "allarme": False}  # not in the panel data
     assert s7.name == "Ingresso 7 (PORTA SECONDARIA)" and s7.is_on is True and s7.device_class == DC.DOOR
     assert s9.name == "Ingresso 9 (SENSORE VERANDA)" and s9.device_class == DC.MOTION
-    assert s9.extra_state_attributes == {"raw_state": 0, "settori": ["7 - SETTORE SECONDARIO"]}, s9.extra_state_attributes
+    assert s9.extra_state_attributes == {"raw_state": 0, "allarme": False, "settori": ["7 - SETTORE SECONDARIO"]}, s9.extra_state_attributes
     assert s7.icon is None and s2.icon == "mdi:door-closed"  # opening type: door icon follows state
     coordinator.data = {"inputs": [0, 0]}
     assert s7.is_on is None and s7.extra_state_attributes == {}
@@ -155,7 +156,7 @@ async def main():
     coordinator.data = {"inputs": [0] * 9, "global_state": b"\x00\x00"}
     panel = alarm_control_panel.ElkronAlarmPanel(coordinator, client, SimpleNamespace(entry_id="e1"))
     assert panel.entity_id == "alarm_control_panel.elkron_mp500_sistema"
-    assert panel.extra_state_attributes == {"sessioni_aperte": 3, "connessione_in_pausa": False, "stato_grezzo": "00 00", "cifre_digitate": 0}
+    assert panel.extra_state_attributes == {"sessioni_aperte": 3, "connessione_in_pausa": False, "stato_grezzo": "00 00", "cifre_digitate": 0, "ingressi_in_allarme": []}
     A = alarm_control_panel.AlarmControlPanelState
     assert panel.state == A.DISARMED
     coordinator.data["global_state"] = b"\xff\x00"
@@ -163,6 +164,83 @@ async def main():
     coordinator.data["global_state"] = b"\x0f\x00"  # some sectors only: never reported as disarmed
     assert panel.state == A.ARMED_CUSTOM_BYPASS
     print("alarm states + session counter attribute: OK")
+
+    # 3b) alarm detection from bit 0x04 of the input bytes
+    from custom_components.elkron_mp500.alarm import AlarmTracker
+    from custom_components.elkron_mp500 import event as event_platform
+
+    ARMED, OFF = b"\xff\x00", b"\x00\x00"
+    t = AlarmTracker()
+    r = t.update([0] * 9, OFF)
+    assert r == {"alarm_inputs": [], "triggered": False, "alarm_memory": []}
+    assert t.update([0] * 9, ARMED)["triggered"] is False
+    assert t.update([2, 0, 0, 0, 0, 0, 0, 0, 0], ARMED)["triggered"] is False  # open while armed: not an alarm yet
+    r = t.update([6, 0, 0, 0, 0, 0, 0, 0, 0], ARMED)  # 0x06: open and in alarm
+    assert r["triggered"] and r["alarm_inputs"] == [1] and r["alarm_memory"] == [1], r
+    r = t.update([4, 0, 0, 0, 0, 0, 0, 0, 0], ARMED)  # closed again, memory stays: still the same alarm
+    assert r["triggered"] and r["alarm_inputs"] == [1]
+    r = t.update([4, 0, 0, 0, 0, 0, 0, 0, 0], OFF)  # disarmed: alarm over, memory still shown
+    assert not r["triggered"] and r["alarm_memory"] == [1]
+    r = t.update([4, 0, 0, 0, 0, 0, 0, 0, 0], ARMED)  # re-armed with old memory: NOT a new alarm
+    assert not r["triggered"] and r["alarm_memory"] == [1], r
+    r = t.update([6, 0, 0, 0, 0, 0, 0, 0, 0], ARMED)  # same input alarming again while memory is stale: still ignored...
+    assert not r["triggered"]
+    r = t.update([0, 0, 0, 0, 0, 0, 4, 0, 0], ARMED)  # memory cleared, another input alarms
+    assert r["triggered"] and r["alarm_inputs"] == [7], r
+    # first reading already armed and in alarm (e.g. Home Assistant restarted): treated as an alarm
+    assert AlarmTracker().update([4] + [0] * 8, ARMED)["triggered"]
+
+    coordinator.data = {"inputs": [6] + [0] * 8, "global_state": ARMED, "triggered": True, "alarm_inputs": [1], "alarm_memory": [1]}
+    assert panel.state == A.TRIGGERED and panel.extra_state_attributes["ingressi_in_allarme"] == [1]
+    coordinator.data["triggered"] = False
+    assert panel.state == A.ARMED_AWAY
+    sensors = []
+    coordinator.data = {"inputs": [6] + [0] * 8, "alarm_memory": [1]}
+    await binary_sensor.async_setup_entry(hass, entry, lambda ents: sensors.extend(ents))
+    assert sensors[0].is_on is True and sensors[0].extra_state_attributes["allarme"] is True  # 0x06 is open
+    assert sensors[-1].is_on is True and sensors[-1].extra_state_attributes == {"ingressi": [1]}
+    coordinator.data = {"inputs": [4] + [0] * 8, "alarm_memory": [1]}
+    assert sensors[0].is_on is False  # 0x04: closed, only remembered
+    print("alarm detection (bit 0x04, stale memory, restart): OK")
+
+    # 3c) event entity: one event per start and per end
+    fired = []
+    coordinator.data = {"triggered": False}
+    ev = event_platform.ElkronAlarmEvent(coordinator, SimpleNamespace(entry_id="e1"))
+    ev._trigger_event = lambda kind, attrs=None: fired.append((kind, attrs))
+    ev.async_write_ha_state = lambda: None
+    for flag, ins in ((False, []), (True, [1]), (True, [1]), (False, [])):
+        coordinator.data = {"triggered": flag, "alarm_inputs": ins}
+        event_platform.CoordinatorEntity._handle_coordinator_update = lambda self: None
+        ev._handle_coordinator_update()
+    assert fired == [("alarm_triggered", {"ingressi": [1]}), ("alarm_stopped", {"ingressi": []})], fired
+    assert ev.entity_id == "event.elkron_mp500_allarme"
+    print("alarm event entity: OK")
+
+    # 3d) Repairs issue: raised only after 5 minutes of failures, never during a pause
+    import time as _time
+    from custom_components.elkron_mp500 import ElkronCoordinator, ir
+
+    calls = []
+    ir.async_create_issue = lambda *a, **k: calls.append(("create", a[2]))
+    ir.async_delete_issue = lambda *a, **k: calls.append(("delete", a[2]))
+    c = ElkronCoordinator.__new__(ElkronCoordinator)
+    c.hass, c._first_failure = object(), None
+    real = _time.monotonic
+    now = [1000.0]
+    integration.time.monotonic = lambda: now[0]
+    c._update_connection_issue(False)
+    now[0] += 299
+    c._update_connection_issue(False)
+    assert [x for x in calls if x[0] == "create"] == []
+    now[0] += 2
+    c._update_connection_issue(False)
+    assert ("create", "connection_lost") in calls
+    calls.clear()
+    c._update_connection_issue(False, paused=True)  # paused on purpose: issue cleared
+    assert calls == [("delete", "connection_lost")] and c._first_failure is None
+    integration.time.monotonic = real
+    print("Repairs issue after 5 minutes: OK")
 
     # 4) options flow
     coordinator.data = {"inputs": [0] * 9}

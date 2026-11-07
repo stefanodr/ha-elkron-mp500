@@ -78,12 +78,17 @@ class ElkronAlarmPanel(CoordinatorEntity, AlarmControlPanelEntity):
             "connessione_in_pausa": self._client.paused,
             "stato_grezzo": self.coordinator.data["global_state"].hex(" "),
             "cifre_digitate": len(self._digits),
+            "ingressi_in_allarme": self.coordinator.data.get("alarm_inputs", []),
         }
 
     @property
     def state(self) -> AlarmControlPanelState:
         raw = self.coordinator.data["global_state"]
         if raw[:2] == STATE_ARMED:
+            # The panel keeps reporting "armed" while the siren sounds; the
+            # alarm shows only in the input bytes (see alarm.py).
+            if self.coordinator.data.get("triggered"):
+                return AlarmControlPanelState.TRIGGERED
             return AlarmControlPanelState.ARMED_AWAY
         if raw[:2] == STATE_DISARMED:
             return AlarmControlPanelState.DISARMED

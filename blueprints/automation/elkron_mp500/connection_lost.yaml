@@ -1,0 +1,131 @@
+blueprint:
+  name: Elkron MP500 - Connection lost / Connessione persa
+  description: >
+    EN: Warns you when the panel has not answered for a while (alarms cannot be detected meanwhile).
+    It stays quiet while the connection switch is off (pause on purpose). Boxes work as in the intrusion blueprint;
+    variables: {{ titolo }}, {{ messaggio }}.
+
+
+    IT: Ti avvisa quando la centrale non risponde da un po' (nel frattempo gli allarmi non si rilevano).
+    Resta zitto se l'interruttore di connessione è spento (pausa voluta). I box funzionano come nel blueprint
+    di intrusione; variabili: {{ titolo }}, {{ messaggio }}.
+  domain: automation
+  author: Stefano Di Ricco
+  source_url: https://github.com/stefanodr/ha-elkron-mp500/blob/main/blueprints/automation/elkron_mp500/connection_lost.yaml
+  input:
+    alarm_panel:
+      name: Alarm panel / Centrale
+      selector:
+        entity:
+          filter:
+            - integration: elkron_mp500
+              domain: alarm_control_panel
+    connection_switch:
+      name: Connection switch / Interruttore connessione
+      default: switch.elkron_mp500_connessione
+      selector:
+        entity:
+          filter:
+            - integration: elkron_mp500
+              domain: switch
+    minutes:
+      name: Minutes without answer / Minuti senza risposta
+      default: 5
+      selector:
+        number:
+          min: 1
+          max: 120
+          unit_of_measurement: min
+    title:
+      name: Title / Titolo
+      default: "Elkron non raggiungibile"
+      selector:
+        text:
+    message:
+      name: Message / Messaggio
+      default: "La centrale non risponde da {{ minuti }} minuti: gli allarmi non vengono rilevati."
+      selector:
+        text:
+          multiline: true
+    push_section:
+      name: Push notifications / Notifiche push
+      icon: mdi:cellphone-message
+      collapsed: false
+      input:
+        push_1:
+          name: Push 1
+          default: []
+          selector:
+            action:
+        push_2:
+          name: Push 2
+          default: []
+          selector:
+            action:
+    persistent_section:
+      name: Home Assistant notification / Notifica in Home Assistant
+      icon: mdi:bell-ring
+      collapsed: true
+      input:
+        persistent:
+          name: Persistent notification / Notifica persistente
+          default: true
+          selector:
+            boolean:
+    voice_section:
+      name: Voice announcements / Avvisi vocali
+      icon: mdi:bullhorn
+      collapsed: true
+      input:
+        google_voice:
+          name: Google / Nest speakers
+          default: []
+          selector:
+            action:
+        alexa_voice:
+          name: Alexa
+          default: []
+          selector:
+            action:
+        assist_voice:
+          name: Assist satellites
+          default: []
+          selector:
+            action:
+
+mode: single
+
+variables:
+  titolo: !input title
+  persistent_on: !input persistent
+  minuti: !input minutes
+  messaggio: !input message
+
+trigger:
+  - platform: state
+    entity_id: !input alarm_panel
+    to: unavailable
+    for:
+      minutes: !input minutes
+
+condition:
+  - condition: state
+    entity_id: !input connection_switch
+    state: "on"
+
+action:
+  - parallel:
+      - if:
+          - condition: template
+            value_template: "{{ persistent_on }}"
+        then:
+          - action: persistent_notification.create
+            data:
+              title: "{{ titolo }}"
+              message: "{{ messaggio }}"
+              notification_id: elkron_mp500_connection_lost
+      - sequence: !input push_1
+      - sequence: !input push_2
+      - sequence: !input google_voice
+      - sequence: !input alexa_voice
+      - sequence: !input assist_voice

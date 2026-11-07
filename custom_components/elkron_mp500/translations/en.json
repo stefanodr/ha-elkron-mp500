@@ -96,5 +96,11 @@
         "motion": "Motion"
       }
     }
+  },
+  "issues": {
+    "connection_lost": {
+      "title": "Elkron MP500 not reachable",
+      "description": "The panel has not answered for more than 5 minutes, so alarms cannot be detected. Check the IT500WEB module, the network and that the connection switch is on."
+    }
   }
 }

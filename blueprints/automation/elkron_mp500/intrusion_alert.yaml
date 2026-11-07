@@ -1,0 +1,151 @@
+blueprint:
+  name: Elkron MP500 - Intrusion alert / Avviso intrusione
+  description: >
+    EN: Runs when the Elkron MP500 alarm goes off (state "triggered"). Fill in only the boxes you need:
+    each box is a normal action list, so you can add as many phones, speakers or services as you like.
+    In every box you can use the variables {{ titolo }}, {{ messaggio }}, {{ ingressi }} (names of the
+    inputs that raised the alarm) and {{ ora }}.
+
+
+    IT: Si avvia quando la centrale Elkron MP500 va in allarme (stato "triggered"). Compila solo i box che
+    ti servono: ogni box è un normale elenco di azioni, quindi puoi aggiungere quanti telefoni, altoparlanti
+    o servizi vuoi. In ogni box puoi usare le variabili {{ titolo }}, {{ messaggio }}, {{ ingressi }}
+    (nomi degli ingressi che hanno fatto scattare l'allarme) e {{ ora }}.
+  domain: automation
+  author: Stefano Di Ricco
+  source_url: https://github.com/stefanodr/ha-elkron-mp500/blob/main/blueprints/automation/elkron_mp500/intrusion_alert.yaml
+  input:
+    alarm_panel:
+      name: Alarm panel / Centrale
+      selector:
+        entity:
+          filter:
+            - integration: elkron_mp500
+              domain: alarm_control_panel
+    title:
+      name: Title / Titolo
+      default: "Allarme Elkron"
+      selector:
+        text:
+    message:
+      name: Message / Messaggio
+      description: "Template allowed. / Puoi usare template."
+      default: "Possibile intrusione: {{ ingressi }} ({{ ora }})"
+      selector:
+        text:
+          multiline: true
+    push_section:
+      name: Push notifications / Notifiche push
+      icon: mdi:cellphone-message
+      collapsed: false
+      input:
+        push_1:
+          name: Push 1 (person or group / persona o gruppo)
+          description: "Add action: notify.mobile_app_<phone>, with {{ titolo }} and {{ messaggio }}."
+          default: []
+          selector:
+            action:
+        push_2:
+          name: Push 2
+          default: []
+          selector:
+            action:
+        push_3:
+          name: Push 3
+          default: []
+          selector:
+            action:
+        push_4:
+          name: Push 4
+          default: []
+          selector:
+            action:
+    persistent_section:
+      name: Home Assistant notification / Notifica in Home Assistant
+      icon: mdi:bell-ring
+      collapsed: true
+      input:
+        persistent:
+          name: Persistent notification / Notifica persistente
+          default: true
+          selector:
+            boolean:
+    voice_section:
+      name: Voice announcements / Avvisi vocali
+      icon: mdi:bullhorn
+      collapsed: true
+      input:
+        google_voice:
+          name: Google / Nest speakers (tts.speak, tts.cloud_say...)
+          default: []
+          selector:
+            action:
+        alexa_voice:
+          name: Alexa (notify.alexa_media, tts.speak...)
+          default: []
+          selector:
+            action:
+        assist_voice:
+          name: Assist satellites (assist_satellite.announce)
+          default: []
+          selector:
+            action:
+        voice_extra:
+          name: Other voice / Altri avvisi vocali
+          default: []
+          selector:
+            action:
+    extra_section:
+      name: Extra actions / Azioni aggiuntive
+      icon: mdi:cog-play
+      collapsed: true
+      input:
+        extra_actions:
+          name: Cameras, lights, scripts... / Telecamere, luci, script...
+          default: []
+          selector:
+            action:
+
+mode: single
+max_exceeded: silent
+
+variables:
+  titolo: !input title
+  persistent_on: !input persistent
+  panel_entity: !input alarm_panel
+  ids: "{{ state_attr(panel_entity, 'ingressi_in_allarme') or [] }}"
+  ingressi: >-
+    {% set names = namespace(l=[]) %}
+    {% for i in ids %}
+      {% set n = state_attr('binary_sensor.elkron_mp500_ingresso_' ~ i, 'friendly_name') %}
+      {% set names.l = names.l + [n or ('Ingresso ' ~ i)] %}
+    {% endfor %}
+    {{ names.l | join(', ') if names.l else 'ingresso sconosciuto' }}
+  ora: "{{ now().strftime('%H:%M') }}"
+  messaggio: !input message
+
+trigger:
+  - platform: state
+    entity_id: !input alarm_panel
+    to: triggered
+
+action:
+  - parallel:
+      - if:
+          - condition: template
+            value_template: "{{ persistent_on }}"
+        then:
+          - action: persistent_notification.create
+            data:
+              title: "{{ titolo }}"
+              message: "{{ messaggio }}"
+              notification_id: elkron_mp500_intrusion
+      - sequence: !input push_1
+      - sequence: !input push_2
+      - sequence: !input push_3
+      - sequence: !input push_4
+      - sequence: !input google_voice
+      - sequence: !input alexa_voice
+      - sequence: !input assist_voice
+      - sequence: !input voice_extra
+      - sequence: !input extra_actions

@@ -96,5 +96,11 @@
         "motion": "Movimento"
       }
     }
+  },
+  "issues": {
+    "connection_lost": {
+      "title": "Elkron MP500 non raggiungibile",
+      "description": "La centrale non risponde da più di 5 minuti, quindi gli allarmi non possono essere rilevati. Controlla il modulo IT500WEB, la rete e che l'interruttore di connessione sia acceso."
+    }
   }
 }

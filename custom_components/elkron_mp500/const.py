@@ -25,9 +25,12 @@ MIN_SCAN_INTERVAL = 1
 MAX_SCAN_INTERVAL = 300
 MAX_NAMED_INPUTS = 16
 
-# Value of an input byte in the 0x84 reply: 0x02 = open, 0x00 = closed
-# (verified on inputs 1 and 7 in the 2026-10-15 captures).
+# Bits of an input byte in the 0x84 reply. 0x02 = open, 0x00 = closed
+# (verified on inputs 1 and 7 in the 2026-10-15 captures). 0x04 = this input
+# raised the alarm (seen in the 2026-11 controlled test: 02 open, 06 open and
+# in alarm, 04 closed again but remembered). Other bits are not known yet.
 INPUT_OPEN = 0x02
+INPUT_ALARM = 0x04
 
 # Input type = Home Assistant device class, so states read "Aperto/Chiuso" or
 # "Rilevato/Non rilevato" instead of "Acceso/Spento". Default: opening.
@@ -40,6 +43,16 @@ DEFAULT_INPUT_TYPE = "opening"
 # They are part of the public interface (dashboards, automations): never change them.
 ENTITY_PREFIX = "elkron_mp500"
 ALARM_ENTITY_ID = f"alarm_control_panel.{ENTITY_PREFIX}_sistema"
+ALARM_MEMORY_ENTITY_ID = f"binary_sensor.{ENTITY_PREFIX}_memoria_allarme"
+ALARM_EVENT_ENTITY_ID = f"event.{ENTITY_PREFIX}_allarme"
+
+# Event types fired by the event entity.
+EVENT_ALARM_TRIGGERED = "alarm_triggered"
+EVENT_ALARM_STOPPED = "alarm_stopped"
+
+# Repairs: report a panel that has not answered for this long.
+CONNECTION_LOST_AFTER = 300  # seconds
+ISSUE_CONNECTION_LOST = "connection_lost"
 
 
 def input_entity_id(input_id: int) -> str:

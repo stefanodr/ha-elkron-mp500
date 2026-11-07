@@ -97,9 +97,20 @@ L'interruttore ha gli attributi **`login_totali`** e **`contatore_dal`**: i logi
 Gli `entity_id` sono fissi e non cambiano se rinomini gli ingressi: `alarm_control_panel.elkron_mp500_sistema` e `binary_sensor.elkron_mp500_ingresso_1`, `..._2`, ... Usali nelle dashboard e nelle automazioni.
 
 
-- `binary_sensor.*ingresso_N*`: acceso (aperto/rilevato) = valore `02`, spento = `00`. Attributi: `raw_state` (valore grezzo), `settori`.
-- `alarm_control_panel.*sistema*`: `disarmed`, `armed_away`; con altri valori (per esempio solo alcuni settori inseriti dall'app) mostra **armed_custom_bypass** e l'attributo `stato_grezzo`. Attributo `sessioni_aperte`.
+- `binary_sensor.*ingresso_N*`: acceso (aperto/rilevato) = bit `02` del valore, spento = chiuso. Attributi: `raw_state` (valore grezzo), `allarme` (questo ingresso ha fatto scattare l'allarme), `settori`.
+- `alarm_control_panel.*sistema*`: `disarmed`, `armed_away`, **`triggered`** (allarme in corso: inserito e almeno un ingresso segnalato dalla centrale); con altri valori (per esempio solo alcuni settori inseriti dall'app) mostra **armed_custom_bypass** e l'attributo `stato_grezzo`. Attributi `sessioni_aperte`, `ingressi_in_allarme`.
 - `switch.elkron_mp500_connessione`: acceso = integrazione collegata; spento = in pausa per pagina web/app.
+- `binary_sensor.elkron_mp500_memoria_allarme`: acceso finché la centrale ricorda un allarme (attributo `ingressi`).
+- `event.elkron_mp500_allarme`: genera `alarm_triggered` quando l'allarme parte e `alarm_stopped` quando finisce (attributo `ingressi`); un evento non si perde mai, nemmeno con un allarme breve.
+- Se la centrale non risponde da più di 5 minuti (e l'interruttore di connessione è acceso) compare una voce in **Riparazioni**.
+
+## Blueprint di avviso
+Due automazioni pronte in `blueprints/automation/elkron_mp500/`:
+
+- **Avviso intrusione** (`intrusion_alert.yaml`): parte quando scatta l'allarme. Ogni *box* è un normale elenco di azioni, quindi puoi avvisare quante persone e dispositivi vuoi: fino a quattro box push (uno per persona o gruppo, es. `notify.mobile_app_...`), notifica persistente in Home Assistant, box vocali per altoparlanti Google/Nest (`tts.speak`), Alexa (`notify.alexa_media`) e satelliti Assist (`assist_satellite.announce`), più un box extra per telecamere, luci, script. Variabili disponibili in ogni box: `{{ titolo }}`, `{{ messaggio }}`, `{{ ingressi }}` (nomi degli ingressi che hanno fatto scattare l'allarme), `{{ ora }}`.
+- **Connessione persa** (`connection_lost.yaml`): ti avvisa quando la centrale non risponde da N minuti; tace se l'interruttore di connessione è spento.
+
+Importazione: Impostazioni → Automazioni → Blueprint → Importa blueprint, incolla l'URL GitHub del file (oppure copia i file in `config/blueprints/automation/elkron_mp500/`).
 
 ## Inserimento e disinserimento
 

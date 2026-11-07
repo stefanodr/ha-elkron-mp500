@@ -99,9 +99,20 @@ The switch has **`login_totali`** and **`contatore_dal`** attributes: logins mad
 Entity ids are fixed and do not change if you rename the inputs: `alarm_control_panel.elkron_mp500_sistema` and `binary_sensor.elkron_mp500_ingresso_1`, `..._2`, ... Use them in dashboards and automations.
 
 
-- `binary_sensor.*ingresso_N*`: on (open/detected) = value `02`, off = `00`. Attributes: `raw_state` (raw value), `settori`.
-- `alarm_control_panel.*sistema*`: `disarmed`, `armed_away`; with any other value (for example only some sectors armed from the app) it shows **armed_custom_bypass** and the `stato_grezzo` attribute. Also the `sessioni_aperte` attribute.
+- `binary_sensor.*ingresso_N*`: on (open/detected) = bit `02` of the value, off = closed. Attributes: `raw_state` (raw value), `allarme` (this input raised the alarm), `settori`.
+- `alarm_control_panel.*sistema*`: `disarmed`, `armed_away`, **`triggered`** (alarm in progress: armed and at least one input flagged by the panel); with any other value (for example only some sectors armed from the app) it shows **armed_custom_bypass** and the `stato_grezzo` attribute. Attributes: `sessioni_aperte`, `ingressi_in_allarme`.
 - `switch.elkron_mp500_connessione`: on = integration connected; off = paused so the web page/app can log in.
+- `binary_sensor.elkron_mp500_memoria_allarme`: on while the panel remembers an alarm (attribute `ingressi`).
+- `event.elkron_mp500_allarme`: fires `alarm_triggered` when the alarm starts and `alarm_stopped` when it ends (attribute `ingressi`); an event is never missed, even for a short alarm.
+- If the panel does not answer for more than 5 minutes (and the connection switch is on), a **Repairs** entry appears in Home Assistant.
+
+## Alert blueprints
+Two ready-made automations in `blueprints/automation/elkron_mp500/`:
+
+- **Intrusion alert** (`intrusion_alert.yaml`): starts when the alarm goes off. Each *box* is a normal action list, so you can warn as many people and devices as you like: up to four push boxes (one per person or group, e.g. `notify.mobile_app_...`), a persistent notification in Home Assistant, voice boxes for Google/Nest speakers (`tts.speak`), Alexa (`notify.alexa_media`) and Assist satellites (`assist_satellite.announce`), and an extra box for cameras, lights, scripts. Variables available in every box: `{{ titolo }}`, `{{ messaggio }}`, `{{ ingressi }}` (names of the inputs that raised the alarm), `{{ ora }}`.
+- **Connection lost** (`connection_lost.yaml`): warns you when the panel has not answered for N minutes; silent while the connection switch is off.
+
+Import: Settings → Automations → Blueprints → Import blueprint, paste the file's GitHub URL (or copy the files into `config/blueprints/automation/elkron_mp500/`).
 
 ## Arming and disarming
 

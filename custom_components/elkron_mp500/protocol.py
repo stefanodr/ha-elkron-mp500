@@ -376,6 +376,10 @@ class ElkronTcpClient:
         first_timeout: float | None = None,
     ) -> bytes:
         first = await self._read_byte(reader, first_timeout)
+        # A lone 0x03 (a stray frame terminator) was seen while the alarm was
+        # sounding: skip it instead of dropping the whole session.
+        while first == 0x03:
+            first = await self._read_byte(reader, first_timeout)
         if first in (0x06,):
             return bytes((first,))
         if first != 0x16:

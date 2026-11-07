@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.7.0
+**English**
+- **Real alarm detection.** The panel keeps saying "armed" while the siren sounds; the alarm shows only in the input bytes (bit `04`: `06` = open and in alarm, `04` = closed again but remembered). The alarm panel entity now reports **triggered** while an alarm is in progress, with the inputs in `ingressi_in_allarme`. Inputs left over in the panel's memory at the moment of arming are ignored until they clear, so an old alarm is not reported as new.
+- Fixed: an input with value `06` (open and in alarm) showed as closed. The sensor now tests the "open" bit.
+- New `event.elkron_mp500_allarme` (`alarm_triggered` / `alarm_stopped`) and `binary_sensor.elkron_mp500_memoria_allarme`; new `allarme` attribute on each input.
+- A **Repairs** entry appears when the panel has not answered for more than 5 minutes (not while the connection switch is off).
+- A stray `0x03` byte in the panel's reply (seen while the alarm was sounding) no longer closes the session.
+- Two **blueprints** (`blueprints/automation/elkron_mp500/`): intrusion alert with separate boxes for several push users, persistent notification, Google/Nest, Alexa and Assist voice announcements and extra actions; and connection lost.
+
+**Italiano**
+- **Rilevamento vero dell'allarme.** La centrale continua a dire "inserita" mentre la sirena suona; l'allarme si vede solo nei byte degli ingressi (bit `04`: `06` = aperto e in allarme, `04` = richiuso ma ricordato). L'entità allarme ora mostra **triggered** durante un allarme, con gli ingressi in `ingressi_in_allarme`. Gli ingressi rimasti nella memoria della centrale al momento dell'inserimento vengono ignorati finché non si azzerano, così un vecchio allarme non è segnalato come nuovo.
+- Corretto: un ingresso con valore `06` (aperto e in allarme) risultava chiuso. Ora il sensore controlla il bit "aperto".
+- Nuovi `event.elkron_mp500_allarme` (`alarm_triggered` / `alarm_stopped`) e `binary_sensor.elkron_mp500_memoria_allarme`; nuovo attributo `allarme` su ogni ingresso.
+- Compare una voce in **Riparazioni** quando la centrale non risponde da più di 5 minuti (non se l'interruttore di connessione è spento).
+- Un byte `0x03` isolato nella risposta (visto durante l'allarme) non chiude più la sessione.
+- Due **blueprint** (`blueprints/automation/elkron_mp500/`): avviso intrusione con box separati per più utenti push, notifica persistente, avvisi vocali Google/Nest, Alexa e Assist e azioni extra; e connessione persa.
+
 ## 1.6.1
 - Se rinomini un'entità dall'interfaccia (per esempio un ingresso), il nome nuovo resta anche dopo un riavvio o una ricarica. Lo spostamento delle entità create dalle versioni precedenti sugli identificativi stabili ora avviene una sola volta, al passaggio a questa versione.
 - Il controllo del codice di disinserimento (e il salvataggio di un codice nuovo nelle opzioni) non blocca più Home Assistant: l'operazione, volutamente lenta, è eseguita fuori dal ciclo principale.

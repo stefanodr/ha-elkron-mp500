@@ -7,6 +7,7 @@ import time
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -24,14 +25,17 @@ from .const import (
     DEFAULT_TECH_CODE,
     MIN_SCAN_INTERVAL,
     ALARM_ENTITY_ID,
+    CONNECTION_LOST_AFTER,
     DOMAIN,
+    ISSUE_CONNECTION_LOST,
     input_entity_id,
 )
+from .alarm import AlarmTracker
 from .protocol import ElkronBackoffError, ElkronBusyError, ElkronPausedError, ElkronTcpClient
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["binary_sensor", "alarm_control_panel", "switch"]
+PLATFORMS = ["binary_sensor", "alarm_control_panel", "switch", "event"]
 
 # How long the last valid state is shown after a failed reading before the
 # entities become unavailable (a stale door state must not look current).
@@ -75,6 +79,8 @@ class ElkronCoordinator(DataUpdateCoordinator[dict]):
         self.client = client
         self._last_valid_data: dict | None = None
         self._last_ok = 0.0
+        self._first_failure: float | None = None
+        self._tracker = AlarmTracker()
         super().__init__(
             hass,
             _LOGGER,
@@ -82,16 +88,41 @@ class ElkronCoordinator(DataUpdateCoordinator[dict]):
             update_interval=timedelta(seconds=interval),
         )
 
+    @callback
+    def _update_connection_issue(self, ok: bool, paused: bool = False) -> None:
+        """Raise a Repairs issue when the panel has not answered for a while."""
+        if ok or paused:
+            # A pause is on purpose: it is not a fault.
+            self._first_failure = None
+            ir.async_delete_issue(self.hass, DOMAIN, ISSUE_CONNECTION_LOST)
+            return
+        now = time.monotonic()
+        if self._first_failure is None:
+            self._first_failure = now
+        elif now - self._first_failure >= CONNECTION_LOST_AFTER:
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                ISSUE_CONNECTION_LOST,
+                is_fixable=False,
+                severity=ir.IssueSeverity.ERROR,
+                translation_key=ISSUE_CONNECTION_LOST,
+            )
+
     async def _async_update_data(self) -> dict:
         try:
             data = await self.client.read_state()
+            data.update(self._tracker.update(data["inputs"], data["global_state"]))
             self._last_valid_data = data
             self._last_ok = time.monotonic()
+            self._update_connection_issue(True)
             return data
         except ElkronPausedError as err:
             # On purpose: show the entities as unavailable, not as stale.
+            self._update_connection_issue(False, paused=True)
             raise UpdateFailed(str(err)) from err
         except Exception as err:
+            self._update_connection_issue(False)
             quiet = isinstance(err, (ElkronBackoffError, ElkronBusyError))
             fresh = time.monotonic() - self._last_ok < STALE_GRACE
             if self._last_valid_data is not None and fresh:
@@ -200,6 +231,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         data = hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
+        ir.async_delete_issue(hass, DOMAIN, ISSUE_CONNECTION_LOST)
         if data is not None:
             await data["client"].close()
     return unload_ok
