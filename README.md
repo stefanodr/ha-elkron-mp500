@@ -112,7 +112,12 @@ Two ready-made automations in `blueprints/automation/elkron_mp500/`:
 - **Intrusion alert** (`intrusion_alert.yaml`): starts when the alarm goes off. Each *box* is a normal action list, so you can warn as many people and devices as you like: up to four push boxes (one per person or group, e.g. `notify.mobile_app_...`), a persistent notification in Home Assistant, voice boxes for Google/Nest speakers (`tts.speak`), Alexa (`notify.alexa_media`) and Assist satellites (`assist_satellite.announce`), and an extra box for cameras, lights, scripts. Variables available in every box: `{{ titolo }}`, `{{ messaggio }}`, `{{ ingressi }}` (names of the inputs that raised the alarm), `{{ ora }}`.
 - **Connection lost** (`connection_lost.yaml`): warns you when the panel has not answered for N minutes; silent while the connection switch is off.
 
-Import: Settings → Automations → Blueprints → Import blueprint, paste the file's GitHub URL (or copy the files into `config/blueprints/automation/elkron_mp500/`).
+HACS installs only the integration folder and cannot install blueprints, so import them once with these buttons:
+
+- Intrusion alert: [![Open your Home Assistant instance and show the blueprint import dialog.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https://github.com/stefanodr/ha-elkron-mp500/blob/main/blueprints/automation/elkron_mp500/intrusion_alert.yaml)
+- Connection lost: [![Open your Home Assistant instance and show the blueprint import dialog.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https://github.com/stefanodr/ha-elkron-mp500/blob/main/blueprints/automation/elkron_mp500/connection_lost.yaml)
+
+Or by hand: Settings → Automations → Blueprints → Import blueprint, paste the file's GitHub URL (or copy the files into `config/blueprints/automation/elkron_mp500/`).
 
 ## Arming and disarming
 

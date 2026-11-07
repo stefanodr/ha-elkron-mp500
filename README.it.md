@@ -110,7 +110,12 @@ Due automazioni pronte in `blueprints/automation/elkron_mp500/`:
 - **Avviso intrusione** (`intrusion_alert.yaml`): parte quando scatta l'allarme. Ogni *box* è un normale elenco di azioni, quindi puoi avvisare quante persone e dispositivi vuoi: fino a quattro box push (uno per persona o gruppo, es. `notify.mobile_app_...`), notifica persistente in Home Assistant, box vocali per altoparlanti Google/Nest (`tts.speak`), Alexa (`notify.alexa_media`) e satelliti Assist (`assist_satellite.announce`), più un box extra per telecamere, luci, script. Variabili disponibili in ogni box: `{{ titolo }}`, `{{ messaggio }}`, `{{ ingressi }}` (nomi degli ingressi che hanno fatto scattare l'allarme), `{{ ora }}`.
 - **Connessione persa** (`connection_lost.yaml`): ti avvisa quando la centrale non risponde da N minuti; tace se l'interruttore di connessione è spento.
 
-Importazione: Impostazioni → Automazioni → Blueprint → Importa blueprint, incolla l'URL GitHub del file (oppure copia i file in `config/blueprints/automation/elkron_mp500/`).
+HACS installa solo la cartella dell'integrazione e non può installare i blueprint, quindi importali una volta con questi pulsanti:
+
+- Avviso intrusione: [![Open your Home Assistant instance and show the blueprint import dialog.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https://github.com/stefanodr/ha-elkron-mp500/blob/main/blueprints/automation/elkron_mp500/intrusion_alert.yaml)
+- Connessione persa: [![Open your Home Assistant instance and show the blueprint import dialog.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https://github.com/stefanodr/ha-elkron-mp500/blob/main/blueprints/automation/elkron_mp500/connection_lost.yaml)
+
+Oppure a mano: Impostazioni → Automazioni → Blueprint → Importa blueprint, incolla l'URL GitHub del file (oppure copia i file in `config/blueprints/automation/elkron_mp500/`).
 
 ## Inserimento e disinserimento
 
