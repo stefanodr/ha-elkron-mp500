@@ -202,6 +202,7 @@ class ElkronTcpClient:
         self._reader: asyncio.StreamReader | None = None
         self._writer: asyncio.StreamWriter | None = None
         self._keepalive_task: asyncio.Task | None = None
+        self._diag_last: dict[int, bytes] = {}
         self._started = False
         self.bootstraps = 0  # HTTP+TCP sessions opened since start (diagnostic)
         self._failures = 0  # consecutive failed bootstraps
@@ -415,7 +416,23 @@ class ElkronTcpClient:
             raise ElkronProtocolError(
                 f"Terminatore risposta IT500WEB non valido: 0x{frame[-1]:02X}"
             )
+        self._diag_frame(frame)
         return frame
+
+    def _diag_frame(self, frame: bytes) -> None:
+        """TEST BUILD: log what the panel sends (state changes and any other record).
+
+        Only frames received after the session is open are logged (never the login
+        exchange), so no code is written to the log.
+        """
+        if not self._started or len(frame) < 9:
+            return
+        command = frame[8]
+        if command in (0x84, 0x80):
+            if self._diag_last.get(command) == bytes(frame):
+                return
+            self._diag_last[command] = bytes(frame)
+        _LOGGER.warning("DIAG frame 0x%02X: %s", command, frame.hex(" "))
 
     async def _exchange(
         self,
@@ -541,6 +558,7 @@ class ElkronTcpClient:
         writer, self._writer = self._writer, None
         self._reader = None
         self._started = False
+        self._diag_last.clear()
         if writer is not None:
             writer.close()
             try:
